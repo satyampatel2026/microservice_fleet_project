@@ -1,12 +1,14 @@
 require("dotenv").config();
-
+const { startOutboxWorker,} = require("./src/workers/outboxWorker");
 const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 
 const adminAuthRouter = require("./src/routes/adminAuthRoute");
 const partnerAuthRouter = require("./src/routes/partnerAuthRoute");
-
+const internalAdminAccountRouter = require(
+  "./src/routes/internalAdminAccountRoute"
+);
 const app = express();
 
 const PORT = process.env.SERVER_PORT || 5001;
@@ -34,6 +36,7 @@ app.use(cookieParser());
 app.use("/", adminAuthRouter);
 
 app.use("/", partnerAuthRouter);
+app.use("/", internalAdminAccountRouter);
 
 
 // ================= HEALTH CHECK =================
@@ -54,3 +57,6 @@ app.listen(PORT, () => {
     `Auth service is running on port ${PORT}`
   );
 });
+const stopOutboxWorker = startOutboxWorker();
+
+console.log("Auth Service Kafka Outbox Worker started");

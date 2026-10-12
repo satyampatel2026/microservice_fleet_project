@@ -23,7 +23,7 @@ export default function UserTable({
   loading,
   onEdit,
   onDelete,
-  onRole,
+  onRole, onStatusChange,
 }) {
   if (loading) return <UserSkeleton />;
   if (!users.length) return <EmptyState />;
@@ -65,6 +65,7 @@ export default function UserTable({
                 onEdit={onEdit}
                 onDelete={onDelete}
                 onRole={onRole}
+                onStatusChange={onStatusChange}
             />
           ))}
         </tbody>
@@ -79,6 +80,7 @@ export default function UserTable({
           onEdit={onEdit}
           onDelete={onDelete}
           onRole={onRole}
+          onStatusChange={onStatusChange}
         />
       ))}
     </div>
@@ -90,7 +92,7 @@ function UserRow({
   user,
   onEdit,
   onDelete,
-  onRole,
+  onRole,onStatusChange,
 }) {
   return (
     <tr className="transition hover:bg-indigo-50/30">
@@ -128,7 +130,7 @@ function UserRow({
       </td>
 
       <td className="px-4 py-2.5">
-        <StatusBadge status={user.status} />
+        <StatusToggle user={user} onChange={onStatusChange} />
       </td>
 
       <td className="px-4 py-2.5 text-sm text-slate-500">
@@ -168,7 +170,7 @@ function UserRow({
 }
 
 function MobileUserCard(props) {
-  const { user, onEdit, onDelete, onRole } = props;
+  const { user, onEdit, onDelete, onRole,onStatusChange  } = props;
 
   return (
     <article className="p-4">
@@ -187,7 +189,7 @@ function MobileUserCard(props) {
           </div>
         </div>
 
-        <StatusBadge status={user.status} />
+        <StatusToggle user={user} onChange={onStatusChange} />
       </div>
 
       <div className="mt-3 grid gap-1.5 text-xs text-slate-500 sm:grid-cols-2">
@@ -314,5 +316,40 @@ function EmptyState() {
         Change the search or filter values.
         </p>
     </div>
+  );
+}
+
+function StatusToggle({ user, onChange }) {
+  const active = user.status === "active";
+
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={active}
+      aria-label={`${user.full_name} status`}
+      onClick={() => onChange(user)}
+      className="inline-flex items-center gap-2 cursor-pointer"
+    >
+      <span
+        className={`relative inline-flex h-6 w-11 rounded-full transition-colors ${
+          active ? "bg-emerald-500" : "bg-slate-300"
+        }`}
+      >
+        <span
+          className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow transition-transform ${
+            active ? "translate-x-6" : "translate-x-1"
+          }`}
+        />
+      </span>
+
+      <span
+        className={`text-xs font-semibold ${
+          active ? "text-emerald-700" : "text-red-600"
+        }`}
+      >
+        {active ? "Active" : "Inactive"}
+      </span>
+    </button>
   );
 }

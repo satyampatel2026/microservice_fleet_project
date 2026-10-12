@@ -1,5 +1,5 @@
 
-const AUTH_URL = "http://localhost:5001/api/partner";
+const AUTH_URL = "http://localhost:5000/api/partner";
 
 async function request(url, options = {}) {
   const response = await fetch(url, {

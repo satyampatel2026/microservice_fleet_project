@@ -1,4 +1,4 @@
-const BASE_URL = "http://localhost:5002/api/admin";
+const BASE_URL = "http://localhost:5000/api/admin";
 
 async function request(url, options = {}) {
   const response = await fetch(url, {
@@ -116,4 +116,14 @@ export async function removeUserRole(
       method: "DELETE",
     }
   );
+}
+
+export async function updateUserStatus(userId, status) {
+  return request(`${BASE_URL}/users/${userId}/status`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ status }),
+  });
 }

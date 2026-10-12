@@ -1,3 +1,5 @@
+const { recoverPartnerRegistration } = require("./partnerRegistrationRecovery");
+const { activatePartnerWithEvent,} = require("../services/partnerActivationService");
 const {
   getRegistrationAuthAccount,
   getRegistrationPartnerProfile,
@@ -37,9 +39,8 @@ let registrationToken = null;
   try {
     const [existingAccounts] = await authDb.query(
       `SELECT auth_id
-       FROM auth_accounts
-       WHERE account_type = 'partner'
-         AND email = ?
+       FROM partner_accounts
+       WHERE email = ?
        LIMIT 1`,
       [normalizedEmail]
     );
@@ -109,9 +110,9 @@ if (!Number.isSafeInteger(partnerId) || partnerId <= 0) {
 }
 
   const [authResult] = await authDb.query(
-  `INSERT INTO auth_accounts
-     (account_type, account_id, email, password_hash, status)
-   VALUES ('partner', ?, ?, ?, 'inactive')`,
+  `INSERT INTO partner_accounts
+     (partner_id, email, password_hash, status)
+    VALUES (?, ?, ?, 'inactive')`,
   [partnerId, normalizedEmail, hashedPassword]
 );
 
@@ -136,162 +137,32 @@ if (!authResult.insertId) {
 if (activationResponse.data?.success !== true) {
   throw new Error("Partner profile activation failed");
 }
- const [activationResult] = await authDb.query(
-  `UPDATE auth_accounts
-   SET status = 'active'
-   WHERE account_type = 'partner'
-     AND account_id = ?
-     AND email = ?
-     AND status = 'inactive'`,
-  [partnerId, normalizedEmail]
-);
-
-if (activationResult.affectedRows !== 1) {
-  throw new Error("Failed to activate partner auth account");
-} 
+await activatePartnerWithEvent(partnerId, normalizedEmail);
 
 return res.status(201).json({
   success: true,
   message: "Partner created successfully",
 });
-   } catch (error) {
+     } catch (error) {
     console.error("Partner Registration V2 Error:", error.message);
 
-    if (partnerId === null && registrationToken) {
-  try {
-    const lookupResponse = await axios.get(
-      `${PARTNER_SERVICE_URL}/internal/partners/registration/${registrationToken}`,
-      {
-        headers: {
-          "x-internal-service-key": process.env.INTERNAL_SERVICE_KEY,
-        },
-        timeout: 5000,
-      }
-    );
-
-    const profile = lookupResponse.data?.data;
-
-    if (
-      lookupResponse.data?.success === true &&
-      Number.isSafeInteger(profile?.partner_id) &&
-      profile.partner_id > 0 &&
-      profile.email === normalizedEmail
-    ) {
-      partnerId = profile.partner_id;
-    }
-  } catch (lookupError) {
-    console.error(
-      "Registration token recovery lookup failed:",
-      lookupError.message
-    );
-  }
-}
-
-    if (partnerId !== null) {
-      try {
-        const authAccount = await getRegistrationAuthAccount(
-          partnerId,
-          normalizedEmail
-        );
-
-        const partnerProfile = await getRegistrationPartnerProfile(
-          partnerId,
-          normalizedEmail
-        );
-
-         if (
-  authAccount?.status === "active" &&
-  partnerProfile?.status === "active"
-) {
-  return res.status(201).json({
-    success: true,
-    message: "Partner created successfully",
-  });
-}
-        if (
-  authAccount?.status === "inactive" &&
-  partnerProfile?.status === "active"
-) {
-  const [recoveryResult] = await authDb.query(
-    `UPDATE auth_accounts
-     SET status = 'active'
-     WHERE auth_id = ?
-       AND account_type = 'partner'
-       AND account_id = ?
-       AND email = ?
-       AND status = 'inactive'`,
-    [authAccount.auth_id, partnerId, normalizedEmail]
-  );
-
-  if (recoveryResult.affectedRows === 1) {
-    console.log("Partner registration activation recovered:", {
+    const recovery = await recoverPartnerRegistration({
       partnerId,
+      normalizedEmail,
+      registrationToken,
     });
+
+    if (recovery.recovered) {
       return res.status(201).json({
-    success: true,
-    message: "Partner created successfully",
-  });
-  }
-}
-
-         if (
-  !authAccount &&
-  partnerProfile?.status === "inactive" &&
-  registrationToken
-) {
-  try {
-    const rollbackResponse = await axios.delete(
-      `${PARTNER_SERVICE_URL}/internal/partners/${partnerId}/rollback`,
-      {
-        headers: {
-          "x-internal-service-key": process.env.INTERNAL_SERVICE_KEY,
-        },
-        data: {
-          email: normalizedEmail,
-          registrationToken,
-        },
-        timeout: 5000,
-      }
-    );
-
-    console.log("Registration profile rollback:", {
-      partnerId,
-      success: rollbackResponse.data?.success === true,
-    });
-  } catch (rollbackError) {
-    console.error(
-      "Registration profile rollback failed:",
-      rollbackError.message
-    );
-  }
-}
-      if (
-  authAccount?.status === "inactive" &&
-  partnerProfile?.status === "inactive"
-) {
-  console.warn("Incomplete partner registration:", {
-    partnerId,
-    message: "Both auth account and partner profile are inactive",
-  });
-}
-        console.error("Registration Recovery State:", {
-  partnerId,
-  authStatus: authAccount?.status || "not_found",
-  partnerStatus: partnerProfile?.status || "not_found",
-});
-      } catch (recoveryError) {
-        console.error(
-          "Registration state verification failed:",
-          recoveryError.message
-        );
-      }
+        success: true,
+        message: "Partner created successfully",
+      });
     }
 
     return res.status(500).json({
       success: false,
-      message: "Partner registration failed",
+      message: "Partner registration could not be completed",
     });
   }
-}
-
+};
 module.exports = { registerPartnerV2 };

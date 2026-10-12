@@ -1,5 +1,5 @@
 require("dotenv").config();
-
+const { startConsumer, stopConsumer } = require("./src/config/kafka");
 const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
@@ -42,16 +42,6 @@ app.use(express.json());
 app.use(cookieParser());
 
 
-// ================= KYC FILES =================
-
-// Uploaded PAN / Aadhaar / GST documents
-app.use(
-  "/myfiles",
-  express.static(
-    path.join(__dirname, "myfiles")
-  )
-);
-
 
 // ================= ROUTES =================
 
@@ -85,4 +75,18 @@ app.listen(PORT, () => {
   console.log(
     `Partner service is running on port ${PORT}`
   );
+});
+
+startConsumer().catch((error) => {
+  console.error("Kafka consumer startup failed:", error.message);
+});
+
+process.on("SIGINT", async () => {
+  await stopConsumer();
+  process.exit(0);
+});
+
+process.on("SIGTERM", async () => {
+  await stopConsumer();
+  process.exit(0);
 });

@@ -16,10 +16,9 @@ const loginPartnerV2 = async (req, res) => {
 
     // Step 1: Credentials auth_db se check karo
     const [accounts] = await authDb.query(
-      `SELECT account_id, email, password_hash, status
-       FROM auth_accounts
-       WHERE account_type = 'partner'
-         AND email = ?
+       `SELECT partner_id AS account_id, email, password_hash, status
+       FROM partner_accounts
+       WHERE email = ?
        LIMIT 1`,
       [email]
     );
@@ -89,7 +88,7 @@ const loginPartnerV2 = async (req, res) => {
       }
     );
 
-    res.cookie("token", token, {
+    res.cookie("partner_token", token, {
       httpOnly: true,
       secure: false,
       sameSite: "lax",

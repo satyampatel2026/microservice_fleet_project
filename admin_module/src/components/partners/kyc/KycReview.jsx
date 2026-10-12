@@ -12,7 +12,7 @@ import KycDetailItem from "./KycDetailItem";
 import KycDocumentCard from "./KycDocumentCard";
 import KycRejectModal from "./KycRejectModal";
 
-const BACKEND_URL = "http://localhost:5003";
+const BACKEND_URL = "http://localhost:5000";
 
 export default function KycReview({
   kycId,
@@ -48,10 +48,11 @@ export default function KycReview({
 
   if (!kycId) return null;
 
-  const getDocumentUrl = (documentPath) => {
-    if (!documentPath) return null;
-    return `${BACKEND_URL}${documentPath}`;
-  };
+  const getDocumentUrl = (documentPath, documentType) => {
+  if (!documentPath || !kyc?.kyc_id) return null;
+
+  return `${BACKEND_URL}/api/admin/kyc/${kyc.kyc_id}/document/${documentType}`;
+};
 
   const handleVerify = async () => {
     const result = await Swal.fire({
@@ -264,9 +265,9 @@ export default function KycReview({
               <section>
                 <SectionTitle title="Uploaded Documents" />
                 <div className="mt-3 grid gap-4 sm:grid-cols-3">
-                  <KycDocumentCard title="PAN" fileName={kyc.pan_document} fileUrl={getDocumentUrl(kyc.pan_document)} />
-                  <KycDocumentCard title="Aadhaar" fileName={kyc.aadhaar_document} fileUrl={getDocumentUrl(kyc.aadhaar_document)} />
-                  <KycDocumentCard title="GST" fileName={kyc.gst_document} fileUrl={getDocumentUrl(kyc.gst_document)} />
+                  <KycDocumentCard title="PAN" fileName={kyc.pan_document} fileUrl={getDocumentUrl(kyc.pan_document,"pan")} />
+                  <KycDocumentCard title="Aadhaar" fileName={kyc.aadhaar_document} fileUrl={getDocumentUrl(kyc.aadhaar_document,"aadhaar")} />
+                  <KycDocumentCard title="GST" fileName={kyc.gst_document} fileUrl={getDocumentUrl(kyc.gst_document,"gst")} />
                 </div>
               </section>
 

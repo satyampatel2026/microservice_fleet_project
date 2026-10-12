@@ -7,9 +7,11 @@ const {
   postUser,
   getUser,
   updateUser,
-  deleteUser,
+  deleteUser,updateUserStatus
 } = require("../controllers/userController");
-
+const requireAdminRole = require(
+  "../middlewares/requireAdminRole"
+);
 const adminAuthMiddleware = require(
   "../middlewares/adminAuthMiddleware"
 );
@@ -18,7 +20,7 @@ const adminAuthMiddleware = require(
 // Total users
 userRouter.get(
   "/api/admin/users/total",
-  adminAuthMiddleware,
+  adminAuthMiddleware,requireAdminRole,
   totalUsers
 );
 
@@ -26,7 +28,7 @@ userRouter.get(
 // Add user
 userRouter.post(
   "/api/admin/users",
-  adminAuthMiddleware,
+  adminAuthMiddleware,requireAdminRole,
   postUser
 );
 
@@ -34,7 +36,7 @@ userRouter.post(
 // Get users
 userRouter.get(
   "/api/admin/users",
-  adminAuthMiddleware,
+  adminAuthMiddleware,requireAdminRole,
   getUser
 );
 
@@ -42,7 +44,7 @@ userRouter.get(
 // Update user
 userRouter.put(
   "/api/admin/users",
-  adminAuthMiddleware,
+  adminAuthMiddleware,requireAdminRole,
   updateUser
 );
 
@@ -50,9 +52,14 @@ userRouter.put(
 // Delete user
 userRouter.delete(
   "/api/admin/users",
-  adminAuthMiddleware,
+  adminAuthMiddleware,requireAdminRole,
   deleteUser
 );
 
+userRouter.patch(
+  "/api/admin/users/:userId/status",
+  adminAuthMiddleware,requireAdminRole,
+  updateUserStatus
+);
 
 module.exports = userRouter;

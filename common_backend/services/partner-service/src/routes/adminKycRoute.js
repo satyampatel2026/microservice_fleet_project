@@ -7,6 +7,10 @@ const adminAuthMiddleware = require(
 );
 
 const {
+  getAdminDocument,
+} = require("../controllers/kycDocumentController");
+
+const {
   getKycList,
   getKycDetails,
   verifyKyc,
@@ -51,5 +55,11 @@ adminKycRouter.patch(
   rejectKyc
 );
 
+// Secure KYC document access for Admin / SUPER ADMIN / Manager
+adminKycRouter.get(
+  "/api/admin/kyc/:kycId/document/:documentType",
+  adminAuthMiddleware,
+  getAdminDocument
+);
 
 module.exports = adminKycRouter;

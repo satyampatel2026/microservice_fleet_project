@@ -15,10 +15,9 @@ const loginUserV2 = async (req, res) => {
   try {
     // STEP 1: Credentials Auth Database se fetch karo
     const [accounts] = await authDb.query(
-      `SELECT account_id, password_hash, status
-       FROM auth_accounts
-       WHERE account_type = 'admin' AND email = ?`,
-      [email]
+      `SELECT admin_id AS account_id, password_hash, status
+         FROM admin_accounts
+       WHERE email = ? LIMIT 1`,[email]
     );
 
     if (accounts.length === 0) {
@@ -78,25 +77,33 @@ const loginUserV2 = async (req, res) => {
     }
 
     // STEP 4: Admin role check
-    if (!authorization.roles?.includes("Admin")) {
-      return res.status(403).json({
-        success: false,
-        message: "Only Admin can login",
-      });
-    }
+    const roles = authorization.roles || [];
+
+if (!roles.length) {
+  return res.status(403).json({
+    success: false,
+    message: "No role assigned to this user",
+  });
+}
+
+const primaryRole = roles.includes("SUPER ADMIN")
+  ? "SUPER ADMIN"
+  : roles.includes("Admin")
+    ? "Admin"
+    : roles[0];
 
     // STEP 5: JWT generate karo
     const token = jwt.sign(
       {
         id: account.account_id,
         type: "admin",
-        role: "Admin",
+        role: primaryRole,
       },
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
 
-    res.cookie("token", token, {
+    res.cookie("admin_token", token, {
       httpOnly: true,
       secure: false,
       sameSite: "lax",
@@ -108,7 +115,7 @@ const loginUserV2 = async (req, res) => {
       message: "Login successful",
       user: {
         id: account.account_id,
-        role: "Admin",
+        role: primaryRole,roles
       },
     });
 

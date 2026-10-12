@@ -9,7 +9,7 @@ const ProtectedRoute = () => {
     const checkAuth = async () => {
       try {
         const response = await fetch(
-          "http://localhost:5001/api/admin/auth/verify",
+          "http://localhost:5000/api/admin/auth/verify",
           {
             method: "GET",
             credentials: "include",

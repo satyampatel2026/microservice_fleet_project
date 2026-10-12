@@ -2,15 +2,15 @@ const express = require("express");
 
 const partnerAuthRouter = express.Router();
 
+const { logoutPartner } = require("../controllers/logoutController");
 const {
-  registerPartner,
-  loginPartner,
-  forgotPassword,
-  verifyOtp,
-  resetPassword,
-  logoutPartner,
-} = require("../controllers/partnerAuthController");
-
+  forgotPasswordV2,
+  verifyOtpV2,
+  resetPasswordV2,
+} = require("../controllers/partnerPasswordResetV2Controller");
+const {
+  registerPartnerV2,
+} = require("../controllers/partnerRegisterV2Controller");
 const {
   loginPartnerV2,
 } = require("../controllers/partnerAuthV2Controller");
@@ -23,7 +23,7 @@ const authMiddleware = require("../middlewares/authMiddleware");
 // Register
 partnerAuthRouter.post(
   "/api/partner/register",
-  registerPartner
+  registerPartnerV2
 );
 
 
@@ -33,31 +33,25 @@ partnerAuthRouter.post(
   loginPartnerV2
 );
 
-// Partner Login V2 - auth_db based
-// partnerAuthRouter.post(
-//   "/api/partner/login-v2",
-//   loginPartnerV2
-// );
-
 
 // Forgot Password
 partnerAuthRouter.post(
   "/api/partner/forgot-password",
-  forgotPassword
+  forgotPasswordV2
 );
 
 
 // Verify OTP
 partnerAuthRouter.post(
   "/api/partner/verify-otp",
-  verifyOtp
+  verifyOtpV2
 );
 
 
 // Reset Password
 partnerAuthRouter.post(
   "/api/partner/reset-password",
-  resetPassword
+  resetPasswordV2
 );
 
 

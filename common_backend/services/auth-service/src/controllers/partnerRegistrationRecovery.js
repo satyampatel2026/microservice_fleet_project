@@ -1,5 +1,6 @@
 const authDb = require("../model/authDb");
 const axios = require("axios");
+const {activatePartnerWithEvent,} = require("../services/partnerActivationService");
 
 const PARTNER_SERVICE_URL =
   process.env.PARTNER_SERVICE_URL || "http://localhost:5003";
@@ -11,10 +12,9 @@ const getRegistrationAuthAccount = async (partnerId, email) => {
   }
 
   const [accounts] = await authDb.query(
-    `SELECT auth_id, account_id, email, status
-     FROM auth_accounts
-     WHERE account_type = 'partner'
-       AND account_id = ?
+     `SELECT auth_id, partner_id, email, status
+        FROM partner_accounts
+      WHERE partner_id = ?
        AND email = ?
      LIMIT 1`,
     [partnerId, email]
@@ -56,8 +56,8 @@ const recoverPartnerRegistration = async ({
   normalizedEmail,
   registrationToken,
 }) => {
-  if (partnerId === null && registrationToken) {
-    try {
+  try {
+    if (partnerId == null && registrationToken) {
       const response = await axios.get(
         `${PARTNER_SERVICE_URL}/internal/partners/registration/${registrationToken}`,
         {
@@ -71,22 +71,21 @@ const recoverPartnerRegistration = async ({
       const profile = response.data?.data;
 
       if (
-        response.data?.success === true &&
-        Number.isSafeInteger(profile?.partner_id) &&
-        profile.partner_id > 0 &&
-        profile.email === normalizedEmail
+        response.data?.success !== true ||
+        profile?.email !== normalizedEmail ||
+        !Number.isSafeInteger(profile?.partner_id) ||
+        profile.partner_id <= 0
       ) {
-        partnerId = profile.partner_id;
+        return { recovered: false, partnerId: null };
       }
-    } catch (error) {
-      console.error(
-        "Registration recovery lookup failed:",
-        error.message
-      );
+
+      partnerId = profile.partner_id;
     }
-  }
-  if (Number.isSafeInteger(partnerId) && partnerId > 0) {
-  try {
+
+    if (!Number.isSafeInteger(partnerId) || partnerId <= 0) {
+      return { recovered: false, partnerId };
+    }
+
     const authAccount = await getRegistrationAuthAccount(
       partnerId,
       normalizedEmail
@@ -97,32 +96,67 @@ const recoverPartnerRegistration = async ({
       normalizedEmail
     );
 
-    console.log("Partner Registration Recovery Check:", {
-      partnerId,
-      authStatus: authAccount?.status || "not_found",
-      partnerStatus: partnerProfile?.status || "not_found",
-    });
+    if (
+      authAccount?.status === "active" &&
+      partnerProfile?.status === "active"
+    ) {
+      return { recovered: true, partnerId };
+    }
 
     if (
-  authAccount?.status === "active" &&
-  partnerProfile?.status === "active"
-) {
+      authAccount?.status === "inactive" &&
+      partnerProfile?.status === "active"
+    ) {
+      await activatePartnerWithEvent(partnerId, normalizedEmail);
+
+return {
+  recovered: true,
+  partnerId,
+};
+    }
+
+    if (
+      authAccount?.status === "inactive" &&
+      partnerProfile?.status === "inactive" &&
+      registrationToken
+    ) {
+      const response = await axios.patch(
+        `${PARTNER_SERVICE_URL}/internal/partners/${partnerId}/activate`,
+        {
+          email: normalizedEmail,
+          registrationToken,
+        },
+        {
+          headers: {
+            "x-internal-service-key": process.env.INTERNAL_SERVICE_KEY,
+          },
+          timeout: 5000,
+        }
+      );
+
+      if (response.data?.success === true) {
+       if (response.data?.success === true) {
+  await activatePartnerWithEvent(partnerId, normalizedEmail);
+
   return {
     recovered: true,
     partnerId,
   };
 }
+      }
+    }
+
+    console.warn("Partner registration remains incomplete:", {
+      partnerId,
+      authStatus: authAccount?.status || "not_found",
+      partnerStatus: partnerProfile?.status || "not_found",
+    });
+
+    return { recovered: false, partnerId };
   } catch (error) {
-    console.error(
-      "Partner registration state check failed:",
-      error.message
-    );
+    console.error("Partner registration recovery failed:", error.message);
+    return { recovered: false, partnerId };
   }
-}
-  return {
-    recovered: false,
-    partnerId,
-  };
 };
 
 module.exports = {

@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:5002/api/admin/departments";
+const API_URL = "http://localhost:5000/api/admin/departments";
 
 async function request(url, options = {}) {
   const response = await fetch(url, {

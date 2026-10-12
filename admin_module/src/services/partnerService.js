@@ -1,5 +1,5 @@
 
-const API_URL = "http://localhost:5003/api/admin";
+const API_URL = "http://localhost:5000/api/admin";
 
 // Common API request function
 async function request(endpoint, options = {}) {

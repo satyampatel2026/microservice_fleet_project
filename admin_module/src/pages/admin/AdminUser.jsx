@@ -24,7 +24,7 @@ export default function AdminUser() {
     loadUsers,
     addUser,
     updateUser,
-    removeUser,
+    removeUser,changeUserStatus
   } = useUsers();
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -66,6 +66,39 @@ export default function AdminUser() {
     });
   }, [users, searchTerm, statusFilter, departmentFilter]);
 
+  async function handleStatusChange(user) {
+  const nextStatus =
+    user.status === "active" ? "inactive" : "active";
+
+  const result = await Swal.fire({
+    icon: "question",
+    title: `${nextStatus === "active" ? "Activate" : "Deactivate"} user?`,
+    text: `${user.full_name} ko ${nextStatus} karna hai?`,
+    showCancelButton: true,
+    confirmButtonText: "Yes, confirm",
+    cancelButtonText: "Cancel",
+  });
+
+  if (!result.isConfirmed) return;
+
+  try {
+    await changeUserStatus(user.user_id, nextStatus);
+
+    await Swal.fire({
+      icon: "success",
+      title: "Status updated",
+      text: `${user.full_name} is now ${nextStatus}.`,
+      timer: 1500,
+      showConfirmButton: false,
+    });
+  } catch (error) {
+    Swal.fire({
+      icon: "error",
+      title: "Status update failed",
+      text: error.message,
+    });
+  }
+}
   async function handleDelete(user) {
     const result = await Swal.fire({
       icon: "warning",
@@ -185,13 +218,14 @@ export default function AdminUser() {
             departments={departments}
           />
 
-          <UserTable
-            users={filteredUsers}
-            loading={loading}
-            onEdit={setEditingUser}
-            onDelete={handleDelete}
-            onRole={setRoleUser}
-          />
+         <UserTable
+  users={filteredUsers}
+  loading={loading}
+  onEdit={setEditingUser}
+  onDelete={handleDelete}
+  onRole={setRoleUser}
+  onStatusChange={handleStatusChange}
+/>
 
           {!loading && users.length > 0 && (
             <div className="border-t border-slate-200/80 bg-slate-50/70 px-4 py-3 text-xs text-slate-500">

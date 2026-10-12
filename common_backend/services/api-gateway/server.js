@@ -1,98 +1,90 @@
-require("dotenv").config();
+﻿require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
+const helmet = require("helmet");
 const { createProxyMiddleware } = require("http-proxy-middleware");
 
 const app = express();
 
-app.use(cors());
+app.use(helmet());
+app.use(cors({
+  origin: [
+    "http://localhost:5173",
+    "http://localhost:5174",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:5174",
+  ],
+  credentials: true,
+}));
 
 app.get("/health", (req, res) => {
-    res.json({
-        success: true,
-        service: "api-gateway",
-        message: "API Gateway is running"
-    });
+  res.json({
+    success: true,
+    service: "api-gateway",
+    message: "API Gateway is running",
+  });
 });
 
+const proxyTo = (target) =>
+  createProxyMiddleware({
+    target,
+    changeOrigin: true,
+    // Preserve the original /api/... path
+    pathRewrite: (path, req) => req.originalUrl,
+  });
+
 // ===============================
-// USER SERVICE
+// AUTH SERVICE - PORT 5001
 // ===============================
 
 app.use(
+  [
+    "/api/admin/login",
+    "/api/admin/logout",
     "/api/admin/auth",
-    createProxyMiddleware({
-        target: process.env.AUTH_SERVICE_URL,
-        changeOrigin: true
-    })
-);
-
-app.use(
-    "/api/users",
-    createProxyMiddleware({
-        target: process.env.USER_SERVICE_URL,
-        changeOrigin: true,
-        pathRewrite: (path) => `/api/users${path}`
-    })
-);
-
-app.use(
-    "/api/departments",
-    createProxyMiddleware({
-        target: process.env.USER_SERVICE_URL,
-        changeOrigin: true,
-         pathRewrite: (path) => `/api/departments${path}`
-    })
-);
-
-app.use(
-    "/api/roles",
-    createProxyMiddleware({
-        target: process.env.USER_SERVICE_URL,
-        changeOrigin: true,
-         pathRewrite: (path) => `/api/roles${path}`
-    })
-);
-
-app.use(
-    "/api/userrole",
-    createProxyMiddleware({
-        target: process.env.USER_SERVICE_URL,
-        changeOrigin: true,
-        pathRewrite: (path) => `/api/userrole${path}`
-    })
-);
-
-// ===============================
-// PARTNER SERVICE
-// ===============================
-app.use(
+    "/api/partner/login",
+    "/api/partner/logout",
+    "/api/partner/register",
+    "/api/partner/forgot-password",
+    "/api/partner/verify-otp",
+    "/api/partner/reset-password",
     "/api/partner/auth",
-    createProxyMiddleware({
-        target: process.env.AUTH_SERVICE_URL,
-        changeOrigin: true
-    })
+  ],
+  proxyTo(process.env.AUTH_SERVICE_URL)
 );
+
+// ===============================
+// PARTNER SERVICE - PORT 5003
+// Admin Partner Management + KYC
+// ===============================
 
 app.use(
-    "/api/partner",
-    createProxyMiddleware({
-        target: process.env.PARTNER_SERVICE_URL,
-        changeOrigin: true,
-        pathRewrite: {
-            "^/": "/api/"
-        },
-        logger:console
-    })
+  [
+    "/api/admin/partners",
+    "/api/admin/kyc",
+    "/api/partner/kyc",
+  ],
+  proxyTo(process.env.PARTNER_SERVICE_URL)
 );
 
 // ===============================
-// SERVER
+// ADMIN SERVICE - PORT 5002
 // ===============================
+
+app.use(
+  [
+    "/api/admin/users",
+    "/api/admin/departments",
+    "/api/admin/roles",
+    "/api/admin/user-roles",
+    "/api/admin/dashboard",
+  ],
+  proxyTo(process.env.USER_SERVICE_URL)
+);
 
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-    console.log(`API Gateway running on port ${PORT}`);
+  console.log(`API Gateway running on port ${PORT}`);
 });

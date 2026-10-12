@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:5003/api/partner";
+const API_URL = "http://localhost:5000/api/partner";
 
 
 // ==========================================

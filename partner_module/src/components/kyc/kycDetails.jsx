@@ -1,33 +1,13 @@
-const API_BASE_URL = "http://localhost:5003";
+const API_BASE_URL = "http://localhost:5000";
 
-const getDocumentUrl = (document) => {
-    if (!document) return "";
+const getDocumentUrl = (document, documentType) => {
+  if (!document) return "";
 
-    let url = "";
+  const allowedTypes = ["pan", "aadhaar", "gst"];
 
-    if (typeof document === "string") {
-        url = document;
-    }
+  if (!allowedTypes.includes(documentType)) return "";
 
-    if (typeof document === "object") {
-        url =
-            document.url ||
-            document.path ||
-            document.file_url ||
-            document.fileUrl ||
-            "";
-    }
-
-    if (!url) return "";
-
-    if (
-        url.startsWith("http://") ||
-        url.startsWith("https://")
-    ) {
-        return url;
-    }
-
-    return `${API_BASE_URL}${url.startsWith("/") ? "" : "/"}${url}`;
+  return `${API_BASE_URL}/api/partner/kyc/document/${documentType}`;
 };
 
 const statusClass = (status) => {
@@ -73,12 +53,17 @@ const DetailRow = ({
 const DocumentRow = ({
     label,
     document,
+    documentType,
     onViewDocument,
     optional = false
 }) => {
-    const exists = Boolean(getDocumentUrl(document));
-
-    return (
+   const exists = Boolean(document);
+    console.log("DocumentRow Render:", {
+  label,
+  exists,
+  documentType,
+});
+return (
         <tr>
             <td className="px-6 py-4 text-sm font-medium text-slate-600">
                 {label}
@@ -88,7 +73,7 @@ const DocumentRow = ({
                 {exists ? (
                     <button
                         type="button"
-                        onClick={() => onViewDocument(document)}
+                        onClick={() => onViewDocument(document,documentType)}
                         className="font-semibold text-indigo-600 hover:text-indigo-700"
                     >
                         View Document
@@ -125,7 +110,7 @@ const KycDetails = ({
     onEdit,
     setError
 }) => {
-    const handleViewDocument = async (document) => {
+    const handleViewDocument = async (document,documentType) => {
         const newTab = window.open("", "_blank");
 
         if (!newTab) {
@@ -134,7 +119,7 @@ const KycDetails = ({
         }
 
         try {
-            const url = getDocumentUrl(document);
+            const url = getDocumentUrl(document,documentType);
 
             if (!url) {
                 newTab.close();
@@ -293,18 +278,21 @@ const KycDetails = ({
                         <DocumentRow
                             label="PAN Document"
                             document={kyc.pan_document}
+                             documentType="pan"
                             onViewDocument={handleViewDocument}
                         />
 
                         <DocumentRow
                             label="Aadhaar Document"
                             document={kyc.aadhaar_document}
+                            documentType="aadhaar"
                             onViewDocument={handleViewDocument}
                         />
 
                         <DocumentRow
                             label="GST Document"
                             document={kyc.gst_document}
+                              documentType="gst"
                             onViewDocument={handleViewDocument}
                             optional
                         />

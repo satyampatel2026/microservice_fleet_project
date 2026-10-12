@@ -5,6 +5,7 @@ import {getUsers,getDepartments,
   addUser as addUserApi,
   updateUser as updateUserApi,
   deleteUser as deleteUserApi,
+  updateUserStatus as updateUserStatusApi,
 } from "../services/userService";
 
 export default function useUsers() {
@@ -76,6 +77,10 @@ export default function useUsers() {
     await deleteUserApi(userId);
     await loadUsers();
   };
+  const changeUserStatus = async (userId, status) => {
+  await updateUserStatusApi(userId, status);
+  await loadUsers();
+};
 
   return {
     users,
@@ -89,5 +94,6 @@ export default function useUsers() {
     addUser,
     updateUser,
     removeUser,
+    changeUserStatus,
   };
 }

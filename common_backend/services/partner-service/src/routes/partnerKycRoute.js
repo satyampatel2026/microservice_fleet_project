@@ -5,7 +5,9 @@ const partnerKycRouter = express.Router();
 const partnerAuthMiddleware = require(
   "../middlewares/partnerAuthMiddleware"
 );
-
+const {
+  getPartnerDocument,
+} = require("../controllers/kycDocumentController");
 const upload = require(
   "../middlewares/uploadKyc"
 );
@@ -51,5 +53,11 @@ partnerKycRouter.get(
   getKycByPartnerId
 );
 
+// Authenticated Partner KYC Document
+partnerKycRouter.get(
+  "/api/partner/kyc/document/:documentType",
+  partnerAuthMiddleware,
+  getPartnerDocument
+);
 
 module.exports = partnerKycRouter;
