@@ -11,6 +11,10 @@ const {
   logoutPartner,
 } = require("../controllers/partnerAuthController");
 
+const {
+  loginPartnerV2,
+} = require("../controllers/partnerAuthV2Controller");
+
 const authMiddleware = require("../middlewares/authMiddleware");
 
 
@@ -26,8 +30,14 @@ partnerAuthRouter.post(
 // Login
 partnerAuthRouter.post(
   "/api/partner/login",
-  loginPartner
+  loginPartnerV2
 );
+
+// Partner Login V2 - auth_db based
+// partnerAuthRouter.post(
+//   "/api/partner/login-v2",
+//   loginPartnerV2
+// );
 
 
 // Forgot Password

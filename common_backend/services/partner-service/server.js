@@ -16,6 +16,9 @@ const adminPartnerRouter = require(
 const adminKycRouter = require(
   "./src/routes/adminKycRoute"
 );
+const internalPartnerRouter = require(
+  "./src/routes/internalPartnerRoute"
+);
 
 const app = express();
 
@@ -60,6 +63,9 @@ app.use("/", adminPartnerRouter);
 
 // Admin KYC Management
 app.use("/", adminKycRouter);
+
+// Internal Service Communication
+app.use("/", internalPartnerRouter);
 
 
 // ================= HEALTH CHECK =================

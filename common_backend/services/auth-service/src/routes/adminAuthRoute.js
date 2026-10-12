@@ -5,6 +5,9 @@ const adminAuthRouter = express.Router();
 const {
   loginUser,logoutUser
 } = require("../controllers/adminAuthController");
+const {
+  loginUserV2,
+} = require("../controllers/adminAuthV2Controller");
 
 const authMiddleware = require("../middlewares/authMiddleware");
 
@@ -12,8 +15,14 @@ const authMiddleware = require("../middlewares/authMiddleware");
 // Admin Login
 adminAuthRouter.post(
   "/api/admin/login",
-  loginUser
+  loginUserV2
 );
+
+// // Admin Login V2 - Microservices testing
+// adminAuthRouter.post(
+//   "/api/admin/login-v2",
+//   loginUserV2
+// );
 
 adminAuthRouter.post(
   "/api/admin/logout",

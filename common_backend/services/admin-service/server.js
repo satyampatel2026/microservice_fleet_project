@@ -8,6 +8,7 @@ const userRouter = require("./src/routes/userRoute");
 const departmentRouter = require("./src/routes/departmentRoute");
 const roleRouter = require("./src/routes/roleRoute");
 const dashboardRouter = require("./src/routes/dashboardRoute");
+const internalAuthRouter = require("./src/routes/internalAuthRoute");
 
 const app = express();
 
@@ -40,6 +41,7 @@ app.use("/", departmentRouter);
 app.use("/", roleRouter);
 
 app.use("/", dashboardRouter);
+app.use("/", internalAuthRouter);
 
 
 // ================= HEALTH CHECK =================

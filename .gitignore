@@ -5,3 +5,4 @@ dist/
 build/
 *.log
 myfiles/
+/fleet_management_backup.sql
