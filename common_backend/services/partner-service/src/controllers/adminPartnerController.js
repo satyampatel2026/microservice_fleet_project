@@ -1,37 +1,137 @@
 const connection = require("../model/db");
 
-
 // ================= GET ALL PARTNERS =================
 
 const getPartners = async (req, res) => {
+  const search =
+    typeof req.query.search === "string"
+      ? req.query.search.trim()
+      : "";
+
+  const status = req.query.status || "";
+  let page = Number(req.query.page || 1);
+  const limit = Number(req.query.limit || 10);
+
+  // Galat page, limit ya status reject karo
+  if (
+    !Number.isSafeInteger(page) ||
+    page < 1 ||
+    !Number.isSafeInteger(limit) ||
+    limit < 1 ||
+    limit > 100 ||
+    search.length > 100 ||
+    !["", "active", "inactive"].includes(status)
+  ) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid search, status or page",
+    });
+  }
+
+  // WHERE 1=1 hamesha true hai.
+  // Iske baad zaroorat ke hisaab se AND conditions jodenge.
+  let where = "WHERE 1=1";
+  const values = [];
+
+  if (search) {
+    where += ` AND (
+      p.partner_name LIKE ? ESCAPE '!'
+      OR p.email LIKE ? ESCAPE '!'
+      OR p.mobile LIKE ? ESCAPE '!'
+    )`;
+
+    const text = `%${search.replace(/[!%_]/g, "!$&")}%`;
+    values.push(text, text, text);
+  }
+
+  if (status) {
+    where += " AND p.status = ?";
+    values.push(status);
+  }
+
   try {
-    const [partners] = await connection.query(`
-      SELECT
-        p.partner_id,
-        p.partner_name,
-        p.email,
-        p.mobile,
-        p.status,
-        p.created_at,
+    // 1. Matching partners kitne hain?
+    const [counts] = await connection.query(
+      `SELECT COUNT(*) AS total
+       FROM partners p
+       ${where}`,
+      values
+    );
 
-        k.kyc_id,
-        k.kyc_status
+    const total = Number(counts[0].total);
+    const totalPages = Math.max(1, Math.ceil(total / limit));
 
-      FROM partners p
+    // Last available page se aage nahi jaana
+    page = Math.min(page, totalPages);
 
-      LEFT JOIN partner_kyc k
-        ON k.partner_id = p.partner_id
+    const offset = (page - 1) * limit;
 
-      ORDER BY p.created_at DESC
-    `);
+    // 2. Current page ke partners laao.
+    // Har partner ki latest KYC row li hai, taaki duplicate rows na aayein.
+    const [partners] = await connection.query(
+      `SELECT
+         p.partner_id,
+         p.partner_name,
+         p.email,
+         p.mobile,
+         p.status,
+         p.created_at,
+         k.kyc_id,
+         k.kyc_status
+       FROM partners p
+       LEFT JOIN partner_kyc k
+         ON k.kyc_id = (
+           SELECT MAX(kyc_id)
+           FROM partner_kyc
+           WHERE partner_id = p.partner_id
+         )
+       ${where}
+       ORDER BY p.created_at DESC, p.partner_id DESC
+       LIMIT ? OFFSET ?`,
+      [...values, limit, offset]
+    );
+
+    // 3. Sirf is page ke partners ki services laao
+    let partnerServices = [];
+
+    if (partners.length > 0) {
+      const partnerIds = partners.map(
+        (partner) => partner.partner_id
+      );
+
+      const [services] = await connection.query(
+        `SELECT partner_id, service_id
+         FROM partner_services
+         WHERE partner_id IN (?)`,
+        [partnerIds]
+      );
+
+      partnerServices = services;
+    }
+
+    // Har partner ke saath uski service IDs jodo
+    for (const partner of partners) {
+      partner.service_ids = [];
+
+      for (const service of partnerServices) {
+        if (service.partner_id === partner.partner_id) {
+          partner.service_ids.push(service.service_id);
+        }
+      }
+    }
 
     return res.status(200).json({
       success: true,
       data: partners,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+      },
     });
-
   } catch (error) {
-    console.error("Get Partners Error:", error);
+    console.error("Get Partners Error:", error.message);
 
     return res.status(500).json({
       success: false,
@@ -39,7 +139,6 @@ const getPartners = async (req, res) => {
     });
   }
 };
-
 
 // ================= UPDATE PARTNER STATUS =================
 

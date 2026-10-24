@@ -1,9 +1,6 @@
 const { recoverPartnerRegistration } = require("./partnerRegistrationRecovery");
-const { activatePartnerWithEvent,} = require("../services/partnerActivationService");
-const {
-  getRegistrationAuthAccount,
-  getRegistrationPartnerProfile,
-} = require("./partnerRegistrationRecovery");
+// const { activatePartnerWithEvent,} = require("../services/partnerActivationService");
+await activatePartnerWithEvent(partnerId, normalizedEmail);
 const authDb = require("../model/authDb");
 const bcrypt = require("bcrypt");
 const crypto = require("crypto");
@@ -14,7 +11,7 @@ const PARTNER_SERVICE_URL =
 
 
 const registerPartnerV2 = async (req, res) => {
-  const { partnername, email, mobile, password } = req.body || {};
+  const { partnername, email, mobile, password,service_ids } = req.body || {};
 
   if (
     typeof partnername !== "string" ||
@@ -31,7 +28,37 @@ const registerPartnerV2 = async (req, res) => {
       message: "Invalid partner registration details",
     });
   }
+  // Validate selected services
+if (
+  !Array.isArray(service_ids) ||
+  service_ids.length === 0 ||
+  service_ids.length > 100
+) {
+  return res.status(400).json({
+    success: false,
+    message: "Select between 1 and 100 services",
+  });
+}
 
+const checkedIds = [];
+
+for (const id of service_ids) {
+  if (!Number.isSafeInteger(id) || id <= 0) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid service ID",
+    });
+  }
+
+  if (checkedIds.includes(id)) {
+    return res.status(400).json({
+      success: false,
+      message: "Duplicate service ID",
+    });
+  }
+
+  checkedIds.push(id);
+}
   const normalizedEmail = email.trim().toLowerCase();
   let partnerId = null;
 let registrationToken = null;
@@ -68,6 +95,7 @@ if (!process.env.INTERNAL_SERVICE_KEY) {
       email: normalizedEmail,
       mobile,
       registrationToken,
+      service_ids
     },
     {
       headers: {

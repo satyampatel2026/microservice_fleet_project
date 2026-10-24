@@ -1,4 +1,5 @@
 const connection = require("../model/db");
+const axios = require("axios");
 
 const getPartnerProfile = async (req, res) => {
   try {
@@ -46,40 +47,159 @@ const getPartnerProfile = async (req, res) => {
 };
 
 const createPartnerProfile = async (req, res) => {
-  try {
-    const { partnername, email, mobile,registrationToken  } = req.body;
+  const {
+    partnername,
+    email,
+    mobile,
+    registrationToken,
+    service_ids,
+  } = req.body || {};
 
-    if (
-      typeof partnername !== "string" ||
-      typeof email !== "string" ||
-      typeof mobile !== "string" ||
-      typeof registrationToken !== "string" ||
-      !/^[a-f0-9]{64}$/.test(registrationToken) ||
-      !partnername.trim() ||
-      !email.trim() ||
-      !/^[0-9]{10}$/.test(mobile)
-    ) {
+  // 1. Partner details validate karo
+  if (
+    typeof partnername !== "string" ||
+    typeof email !== "string" ||
+    typeof mobile !== "string" ||
+    typeof registrationToken !== "string" ||
+    !/^[a-f0-9]{64}$/.test(registrationToken) ||
+    !partnername.trim() ||
+    !email.trim() ||
+    !/^[0-9]{10}$/.test(mobile)
+  ) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid partner details",
+    });
+  }
+
+  // 2. Selected service IDs validate karo
+  if (
+    !Array.isArray(service_ids) ||
+    service_ids.length === 0 ||
+    service_ids.length > 100
+  ) {
+    return res.status(400).json({
+      success: false,
+      message: "Select between 1 and 100 services",
+    });
+  }
+
+  const checkedIds = [];
+
+  for (const id of service_ids) {
+    if (!Number.isSafeInteger(id) || id <= 0) {
       return res.status(400).json({
         success: false,
-        message: "Invalid partner details",
+        message: "Invalid service ID",
       });
     }
 
-    const [result] = await connection.query(
+    if (checkedIds.includes(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Duplicate service ID",
+      });
+    }
+
+    checkedIds.push(id);
+  }
+
+  // 3. Admin Service se selected services verify karo
+  try {
+    const adminServiceUrl = process.env.ADMIN_SERVICE_URL;
+
+    if (!adminServiceUrl || !process.env.INTERNAL_SERVICE_KEY) {
+      throw new Error("Internal service configuration missing");
+    }
+
+    const validationResponse = await axios.post(
+      `${adminServiceUrl}/internal/catalog/validate-services`,
+      { service_ids },
+      {
+        headers: {
+          "x-internal-service-key":
+            process.env.INTERNAL_SERVICE_KEY,
+        },
+        timeout: 5000,
+      }
+    );
+
+    if (validationResponse.data?.success !== true) {
+      throw new Error("Service validation failed");
+    }
+  } catch (error) {
+    if (error.response?.status === 400 ||
+        error.response?.status === 422) {
+      return res.status(422).json({
+        success: false,
+        message: "Invalid or unavailable selected services",
+      });
+    }
+
+    console.error("Catalog Validation Error:", error.message);
+
+    return res.status(503).json({
+      success: false,
+      message: "Unable to validate services right now",
+    });
+  }
+
+  // 4. Database transaction start karo
+  let dbConnection;
+
+  try {
+    dbConnection = await connection.getConnection();
+
+    await dbConnection.beginTransaction();
+
+    // 5. Partner profile insert karo
+    const [result] = await dbConnection.query(
       `INSERT INTO partners
-     (partner_name, email, mobile, status, registration_token)
-     VALUES (UPPER(?), ?, ?, 'inactive', ?)`,
-    [partnername.trim(), email.trim(), mobile, registrationToken]
-   );
+         (partner_name, email, mobile, status, registration_token)
+       VALUES (UPPER(?), ?, ?, 'inactive', ?)`,
+      [
+        partnername.trim(),
+        email.trim(),
+        mobile,
+        registrationToken,
+      ]
+    );
+
+    const partnerId = result.insertId;
+
+    // 6. Selected services insert karo
+    for (const serviceId of service_ids) {
+      await dbConnection.query(
+        `INSERT INTO partner_services
+           (partner_id, service_id)
+         VALUES (?, ?)`,
+        [partnerId, serviceId]
+      );
+    }
+
+    // 7. Dono inserts successful: commit
+    await dbConnection.commit();
 
     return res.status(201).json({
       success: true,
       message: "Partner profile created",
       data: {
-        partner_id: result.insertId,
+        partner_id: partnerId,
       },
     });
+
   } catch (error) {
+    if (dbConnection) {
+      try {
+        await dbConnection.rollback();
+      } catch (rollbackError) {
+        console.error(
+          "Partner Transaction Rollback Error:",
+          rollbackError
+        );
+      }
+    }
+
     if (error.code === "ER_DUP_ENTRY") {
       return res.status(409).json({
         success: false,
@@ -93,59 +213,11 @@ const createPartnerProfile = async (req, res) => {
       success: false,
       message: "Failed to create partner profile",
     });
-  }
-};
 
-const rollbackPartnerProfile = async (req, res) => {
-  try {
-    const { partnerId } = req.params;
-    const { email,registrationToken  } = req.body;
-
-    if (
-      !/^[1-9]\d*$/.test(partnerId) ||
-      typeof registrationToken !== "string" ||
-      !/^[a-f0-9]{64}$/.test(registrationToken) ||
-      typeof email !== "string" ||
-      !email.trim()
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid rollback details",
-      });
+  } finally {
+    if (dbConnection) {
+      dbConnection.release();
     }
-
-    const [result] = await connection.query(
-      `DELETE FROM partners
-       WHERE partner_id = ?
-         AND email = ?
-        AND registration_token = ?
-         AND status = 'inactive'
-         AND NOT EXISTS (
-           SELECT 1
-           FROM partner_kyc
-           WHERE partner_kyc.partner_id = partners.partner_id
-         )`,
-      [partnerId, email.trim(),registrationToken]
-    );
-
-    if (result.affectedRows !== 1) {
-      return res.status(409).json({
-        success: false,
-        message: "Profile not eligible for rollback",
-      });
-    }
-
-    return res.status(200).json({
-      success: true,
-      message: "Incomplete partner profile rolled back",
-    });
-  } catch (error) {
-    console.error("Partner Rollback Error:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Partner rollback failed",
-    });
   }
 };
 
@@ -173,6 +245,7 @@ const activatePartnerProfile = async (req, res) => {
         registration_token = NULL
        WHERE partner_id = ?
          AND email = ?
+         AND registration_token = ?
          AND status = 'inactive'`,
       [partnerId, email.trim(),registrationToken]
     );
@@ -237,4 +310,4 @@ const activatePartnerProfile = async (req, res) => {
     });
   }
 };
-module.exports = { getPartnerProfile,createPartnerProfile,rollbackPartnerProfile,activatePartnerProfile,getPartnerByRegistrationToken };
+module.exports = { getPartnerProfile,createPartnerProfile,activatePartnerProfile,getPartnerByRegistrationToken };

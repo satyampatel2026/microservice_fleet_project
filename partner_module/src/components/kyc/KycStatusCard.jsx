@@ -1,111 +1,109 @@
+
+import {
+  Clock3,
+  ShieldCheck,
+  ShieldX,
+  AlertCircle,
+} from "lucide-react";
+
 const statusConfig = {
+  pending: {
+    label: "Pending Verification",
+    description: "Your documents are awaiting verification.",
+    color: "border-amber-200 bg-[#FFFBF2]",
+    iconBg: "bg-amber-100 text-amber-700",
+    textColor: "text-amber-800",
+    badge: "border-amber-200 bg-amber-50 text-amber-700",
+    dot: "bg-amber-500",
+    Icon: Clock3,
+  },
 
-    pending: {
-        label: "Pending Verification",
-        color: "bg-amber-50 text-amber-700 border-amber-200",
-        dot: "bg-amber-500"
-    },
+  verified: {
+    label: "Verified",
+    description: "Your documents have been verified.",
+    color: "border-emerald-200 bg-[#EDF9F6]",
+    iconBg: "bg-emerald-100 text-teal-700",
+    textColor: "text-[#0E5957]",
+    badge: "border-emerald-200 bg-white text-teal-700",
+    dot: "bg-emerald-500",
+    Icon: ShieldCheck,
+  },
 
-    verified: {
-        label: "Verified",
-        color: "bg-emerald-50 text-emerald-700 border-emerald-200",
-        dot: "bg-emerald-500"
-    },
-
-    rejected: {
-        label: "Rejected",
-        color: "bg-red-50 text-red-700 border-red-200",
-        dot: "bg-red-500"
-    }
-
+  rejected: {
+    label: "Rejected",
+    description: "Please review and resubmit your documents.",
+    color: "border-red-200 bg-red-50",
+    iconBg: "bg-red-100 text-red-600",
+    textColor: "text-red-800",
+    badge: "border-red-200 bg-white text-red-700",
+    dot: "bg-red-500",
+    Icon: ShieldX,
+  },
 };
-
 
 const KycStatusCard = ({ status, rejectionReason }) => {
+  const config = statusConfig[status] || statusConfig.pending;
+  const StatusIcon = config.Icon;
 
-    const config =
-        statusConfig[status] ||
-        statusConfig.pending;
+  return (
+    <div className="space-y-3">
+      {/* STATUS CARD */}
+      <div
+        className={`flex flex-wrap items-center justify-between gap-3 rounded-2xl border px-4 py-3.5 shadow-[0_3px_14px_rgba(7,27,34,0.025)] sm:px-5 ${config.color}`}
+      >
+        <div className="flex min-w-0 items-center gap-3">
+          <div
+            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${config.iconBg}`}
+          >
+            <StatusIcon size={19} />
+          </div>
 
-
-    return (
-        <div className="space-y-4">
-
-            {/* Status */}
-            <div
-                className={`
-                    flex items-center justify-between
-                    rounded-2xl border px-5 py-4
-                    ${config.color}
-                `}
+          <div className="min-w-0">
+            <p
+              className={`text-[12px] font-bold ${config.textColor}`}
             >
+              KYC Status
+            </p>
 
-                <div className="flex items-center gap-3">
-
-                    <span
-                        className={`
-                            h-2.5 w-2.5 rounded-full
-                            ${config.dot}
-                        `}
-                    />
-
-                    <div>
-                        <p className="text-sm font-semibold">
-                            KYC Status
-                        </p>
-
-                        <p className="text-xs opacity-75 mt-0.5">
-                            {status === "verified"
-                                ? "Your documents have been verified."
-                                : status === "rejected"
-                                    ? "Please review and resubmit your documents."
-                                    : "Your documents are awaiting verification."
-                            }
-                        </p>
-                    </div>
-
-                </div>
-
-
-                <span className="text-sm font-bold">
-                    {config.label}
-                </span>
-
-            </div>
-
-
-            {/* Rejection Reason */}
-            {status === "rejected" &&
-                rejectionReason && (
-
-                    <div className="rounded-2xl border border-red-200 bg-red-50 p-4">
-
-                        <div className="flex gap-3">
-
-                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-100 text-red-600">
-                                !
-                            </div>
-
-                            <div>
-
-                                <p className="text-sm font-semibold text-red-800">
-                                    Rejection Reason
-                                </p>
-
-                                <p className="mt-1 text-sm text-red-700">
-                                    {rejectionReason}
-                                </p>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-                )}
-
+            <p className="mt-0.5 text-[11px] leading-4 text-slate-600">
+              {config.description}
+            </p>
+          </div>
         </div>
-    );
-};
 
+        <span
+          className={`inline-flex shrink-0 items-center gap-2 rounded-full border px-3 py-1.5 text-[10px] font-bold ${config.badge}`}
+        >
+          <span
+            className={`h-1.5 w-1.5 rounded-full ${config.dot}`}
+          />
+          {config.label}
+        </span>
+      </div>
+
+      {/* REJECTION REASON */}
+      {status === "rejected" && rejectionReason && (
+        <div
+          role="alert"
+          className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3.5 sm:px-5"
+        >
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-red-100 text-red-600">
+            <AlertCircle size={18} />
+          </div>
+
+          <div className="min-w-0">
+            <p className="text-[12px] font-bold text-red-800">
+              Rejection Reason
+            </p>
+
+            <p className="mt-1 whitespace-pre-wrap break-words text-[11px] leading-5 text-red-700">
+              {rejectionReason}
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 export default KycStatusCard;

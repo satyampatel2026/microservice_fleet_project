@@ -21,12 +21,16 @@ async function request(url, options = {}) {
 
 // ================= USERS =================
 
-export async function getUsers() {
-  const data = await request(`${BASE_URL}/users`);
+export async function getUsers(filters = {}) {
+  const query = new URLSearchParams({
+    search: filters.search || "",
+    status: filters.status || "all",
+    department: filters.department || "all",
+    page: String(filters.page || 1),
+    limit: String(filters.limit || 10),
+  });
 
-  return Array.isArray(data)
-    ? data
-    : data.users || [];
+  return request(`${BASE_URL}/users?${query.toString()}`);
 }
 
 export async function addUser(userData) {

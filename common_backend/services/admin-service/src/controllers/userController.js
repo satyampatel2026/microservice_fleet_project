@@ -126,27 +126,84 @@ const postUser = async (req, res) => {
 // ================= GET USERS =================
 
 const getUser = async (req, res) => {
+  const search = typeof req.query.search === "string" ? req.query.search.trim() : "";
+  const status = req.query.status || "all";
+  const department = req.query.department || "all";
+  let page = Number(req.query.page || 1);
+  const limit = Number(req.query.limit || 10);
+
+  if (!Number.isSafeInteger(page) || page < 1 ||
+      !Number.isSafeInteger(limit) || limit < 1 || limit > 100 ||
+      search.length > 100 || !["all", "active", "inactive"].includes(status) ||
+      (department !== "all" && (!Number.isSafeInteger(Number(department)) || Number(department) <= 0))) {
+    return res.status(400).json({ success: false, message: "Invalid search or pagination values" });
+  }
+
+  // Har selected filter ke liye SQL condition aur value jodo.
+  const conditions = [];
+  const values = [];
+
+  if (search) {
+    // ! escape character hai. User ka % ya _ normal text ki tarah search hoga.
+    const text = `%${search.replace(/[!%_]/g, "!$&")}%`;
+    conditions.push(`(u.full_name LIKE ? ESCAPE '!' OR u.email LIKE ? ESCAPE '!'
+      OR u.mobile LIKE ? ESCAPE '!' OR CAST(u.user_id AS CHAR) LIKE ? ESCAPE '!')`);
+    values.push(text, text, text, text);
+  }
+  if (status !== "all") {
+    conditions.push("u.status = ?");
+    values.push(status);
+  }
+  if (department !== "all") {
+    conditions.push("u.department_id = ?");
+    values.push(Number(department));
+  }
+
+  const where = conditions.length ? "WHERE " + conditions.join(" AND ") : "";
+
   try {
-    const query = `
-      SELECT
-        users.user_id,users.full_name,users.email,users.mobile, users.department_id,users.status,users.created_at,departments.department_name
-      FROM users  LEFT JOIN departments
-    ON users.department_id = departments.department_id
-`;
+    // Matching records count karo; sirf current page ka count nahi.
+    const [counts] = await connection.query(
+      `SELECT COUNT(*) AS total FROM users u ${where}`, values
+    );
+    const total = Number(counts[0].total);
+    const totalPages = Math.max(1, Math.ceil(total / limit));
+    page = Math.min(page, totalPages);
+    const offset = (page - 1) * limit;
 
-    const [result] = await connection.query(query);
+    const [users] = await connection.query(
+      `SELECT u.user_id, u.full_name, u.email, u.mobile,
+              u.department_id, u.status, u.created_at, d.department_name
+       FROM users u
+       LEFT JOIN departments d ON u.department_id = d.department_id
+       ${where}
+       ORDER BY u.user_id DESC
+       LIMIT ? OFFSET ?`,
+      [...values, limit, offset]
+    );
 
-    return res.status(200).json(result);
-  } catch (error) {
-    console.error("Get Users Error:", error);
+    // Full database stats: page/search badalne se ye counts nahi badlenge.
+    const [stats] = await connection.query(
+      `SELECT COUNT(*) AS total,
+         COALESCE(SUM(status = 'active'), 0) AS active,
+         COALESCE(SUM(status = 'inactive'), 0) AS inactive
+       FROM users`
+    );
 
-    return res.status(500).json({
-      success: false,
-      message: error.message,
+    return res.status(200).json({
+      success: true, users,
+      pagination: { page, limit, total, totalPages },
+      stats: {
+        total: Number(stats[0].total),
+        active: Number(stats[0].active),
+        inactive: Number(stats[0].inactive),
+      },
     });
+  } catch (error) {
+    console.error("Get Users Error:", error.message);
+    return res.status(500).json({ success: false, message: "Unable to load users" });
   }
 };
-
 
 // ================= UPDATE USER =================
 const updateUser = async (req, res) => {

@@ -7,7 +7,7 @@ const internalServiceMiddleware = require(
 );
 
 const {
-  getPartnerProfile,createPartnerProfile,rollbackPartnerProfile,activatePartnerProfile,getPartnerByRegistrationToken
+  getPartnerProfile,createPartnerProfile,activatePartnerProfile,getPartnerByRegistrationToken
 } = require("../controllers/internalPartnerController");
 
 internalPartnerRouter.get(
@@ -20,12 +20,6 @@ internalPartnerRouter.post(
   "/internal/partners",
   internalServiceMiddleware,
   createPartnerProfile
-);
-
-internalPartnerRouter.delete(
-  "/internal/partners/:partnerId/rollback",
-  internalServiceMiddleware,
-  rollbackPartnerProfile
 );
 
 internalPartnerRouter.patch(

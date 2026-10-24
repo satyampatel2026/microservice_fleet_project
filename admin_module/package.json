@@ -10,12 +10,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@marsidev/react-turnstile": "^1.6.2",
     "@tailwindcss/vite": "^4.3.3",
     "axios": "^1.19.0",
     "bootstrap": "^5.3.8",
     "formik": "^2.4.9",
     "framer-motion": "^12.43.0",
-    "lucide-react": "^1.45.0",
+    "lucide-react": "^1.56.0",
     "moment": "^2.30.1",
     "react": "^19.2.8",
     "react-bootstrap": "^2.10.10",

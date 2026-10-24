@@ -1,16 +1,14 @@
+
+import { useState } from "react";
 import Sidebar from "../components/sidebar";
 import Navbar from "../components/navbar";
 import Footer from "../components/footer";
-import { useState } from "react";
 
-const Layout = ({
-  children,
-  activePath,
-}) => {
+const Layout = ({ children, activePath }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="flex min-h-screen bg-[#F5F8F7]">
       {/* SIDEBAR */}
       <Sidebar
         open={sidebarOpen}
@@ -19,14 +17,14 @@ const Layout = ({
       />
 
       {/* MAIN AREA */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex min-h-screen min-w-0 flex-1 flex-col">
         {/* NAVBAR */}
         <Navbar
           onMenuClick={() => setSidebarOpen(true)}
         />
 
         {/* PAGE CONTENT */}
-        <main className="flex-1 p-4 md:p-5 lg:p-6">
+        <main className="relative flex-1 px-3 py-4 sm:px-4 md:px-5 md:py-5 lg:px-6">
           {children}
         </main>
 

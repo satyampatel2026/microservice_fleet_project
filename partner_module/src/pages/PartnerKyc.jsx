@@ -313,10 +313,10 @@ const PartnerKyc = () => {
                 title="Dashboard"
                 activePath="/partner/kyc"
             >
-                <div className="flex min-h-[500px] items-center justify-center">
+                <div className="flex min-h-[55vh] items-center justify-center">
                     <div className="text-center">
-                        <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-slate-200 border-t-indigo-600" />
-                        <p className="mt-3 text-sm text-slate-500">
+                         <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-teal-100 border-t-[#0F766E]" />
+                        <p className="mt-3 text-xs font-medium text-slate-500">
                             Loading KYC information...
                         </p>
                     </div>
@@ -326,13 +326,9 @@ const PartnerKyc = () => {
     }
 
     return (
-        <Layout
-            title="Dashboard"
-            activePath="/partner/kyc"
-        >
-            <div className="min-h-screen bg-[#f8fafc]">
-                <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-
+        <Layout activePath="/partner/kyc">
+            <div className="w-full">
+              <div className="mx-auto w-full max-w-[1600px] space-y-4">
                     <div className="mb-6">
                         <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
                             <div>
@@ -344,11 +340,11 @@ const PartnerKyc = () => {
                                     </span>
                                 </div>
 
-                                <h3 className="mt-2 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+                                <h3 className="text-[20px] font-extrabold tracking-tight text-[#092B31]">
                                     Partner KYC
                                 </h3>
 
-                                <p className="mt-1 text-sm text-slate-500">
+                                 <p className="mt-1 text-[11px] text-slate-500">
                                     Manage your KYC information and verification documents.
                                 </p>
                             </div>
@@ -400,7 +396,7 @@ const PartnerKyc = () => {
                                     setModalError("");
                                     setEditModal(true);
                                 }}
-                                className="mt-5 rounded-xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white hover:bg-indigo-700"
+                                className="mt-5 rounded-xl bg-[#0F766E] px-5 py-2.5 text-[12px] font-semibold text-white transition-colors hover:bg-[#0E5957]"
                             >
                                 Submit KYC
                             </button>

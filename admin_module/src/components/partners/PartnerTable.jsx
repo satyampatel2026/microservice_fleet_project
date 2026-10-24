@@ -1,3 +1,6 @@
+import { useState } from "react";
+import { Eye } from "lucide-react";
+import PartnerServicesModal from "./PartnerServicesModal";
 import PartnerStatusBadge from "./PartnerStatusBadge";
 import PartnerTableSkeleton from "./PartnerTableSkeleton";
 import EmptyState from "../common/EmptyState";
@@ -6,6 +9,7 @@ import Pagination from "../common/Pagination";
 
 export default function PartnerTable({
   partners,
+  serviceCatalog = [],
   loading,
   error,
   page,
@@ -14,6 +18,7 @@ export default function PartnerTable({
   onStatusChange,
   onRetry,
 }) {
+  const [selectedPartner, setSelectedPartner] = useState(null);
   if (loading) {
     return <PartnerTableSkeleton />;
   }
@@ -66,7 +71,7 @@ export default function PartnerTable({
 
               {/* Action column ko left align kar diya hai taaki wo zyada side me na jaye */}
               <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Action
+                View & Action
               </th>
             </tr>
           </thead>
@@ -113,6 +118,15 @@ export default function PartnerTable({
                   </td>
 
                   <td className="px-6 py-3.5">
+                    <button
+  type="button"
+  onClick={() => setSelectedPartner(partner)}
+  title="View Partner Services"
+  aria-label={`View services of ${partner.partner_name}`}
+  className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-blue-100 bg-blue-50 text-blue-600 transition hover:border-blue-200 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-300"
+>
+  <Eye size={17} strokeWidth={1.8} />
+</button>
                     <button
                       onClick={() =>
                         onStatusChange(partner)
@@ -170,7 +184,15 @@ export default function PartnerTable({
                     partner.created_at
                   ).toLocaleDateString("en-IN")}
                 </p>
-
+                  <button
+  type="button"
+  onClick={() => setSelectedPartner(partner)}
+  title="View Partner Services"
+  aria-label={`View services of ${partner.partner_name}`}
+  className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-blue-100 bg-blue-50 text-blue-600 transition hover:border-blue-200 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-300"
+>
+  <Eye size={17} strokeWidth={1.8} />
+</button>
                 <button
                   onClick={() =>
                     onStatusChange(partner)
@@ -196,6 +218,11 @@ export default function PartnerTable({
           onPageChange={onPageChange}
         />
       </div>
+      <PartnerServicesModal
+  partner={selectedPartner}
+  serviceCatalog={serviceCatalog}
+  onClose={() => setSelectedPartner(null)}
+/>
     </div>
   );
 }

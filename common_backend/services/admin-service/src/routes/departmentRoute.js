@@ -12,6 +12,7 @@ const {
 const adminAuthMiddleware = require(
   "../middlewares/adminAuthMiddleware"
 );
+const requireAdminRole = require("../middlewares/requireAdminRole");
 
 // Get all departments
 departmentRouter.get(
@@ -22,21 +23,21 @@ departmentRouter.get(
 
 // Add department
 departmentRouter.post(
-  "/api/admin/departments",adminAuthMiddleware,
+  "/api/admin/departments",adminAuthMiddleware,requireAdminRole ,
   postDept
 );
 
 
 // Update department
 departmentRouter.put(
-  "/api/admin/departments",adminAuthMiddleware,
+  "/api/admin/departments",adminAuthMiddleware,requireAdminRole ,
   updateDept
 );
 
 
 // Delete department
 departmentRouter.delete(
-  "/api/admin/departments",adminAuthMiddleware,
+  "/api/admin/departments",adminAuthMiddleware,requireAdminRole ,
   deleteDept
 );
 

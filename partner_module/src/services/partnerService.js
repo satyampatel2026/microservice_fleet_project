@@ -50,13 +50,13 @@ export async function logoutPartner() {
 }
 
 // Forgot Password - Send OTP
-export async function sendForgotPasswordOtp(email) {
+export async function sendForgotPasswordOtp(email,captchaToken) {
   return request(`${AUTH_URL}/forgot-password`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ email }),
+    body: JSON.stringify({ email,captchaToken }),
   });
 }
 
@@ -92,6 +92,44 @@ export async function verifyAuth() {
       headers: {
         Accept: "application/json",
       },
+    }
+  );
+}
+
+// Public category and service catalog
+export async function getPartnerServiceCatalog() {
+  return request(
+    "http://localhost:5000/api/partner/service-catalog",
+    {
+      method: "GET",
+    }
+  );
+}
+
+// ================= MY SERVICES =================
+
+// Logged-in partner ki selected services
+export async function getMyServices() {
+  return request(
+    "http://localhost:5000/api/partner/my-services",
+    {
+      method: "GET",
+    }
+  );
+}
+
+// Partner ki services add/remove/update
+export async function updateMyServices(serviceIds) {
+  return request(
+    "http://localhost:5000/api/partner/my-services",
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        service_ids: serviceIds,
+      }),
     }
   );
 }

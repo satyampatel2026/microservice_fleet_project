@@ -32,7 +32,7 @@ const startConsumer = async () => {
   console.log("Kafka event handled:", {
     topic,
     partition,
-    eventType: event.eventType,
+    eventType: event.eventType, 
     eventId: event.eventId,
   });
 },

@@ -1,104 +1,116 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 
 import PartnerTable from "../../components/partners/PartnerTable";
 import {
   getPartners,
-  updatePartnerStatus,
+  updatePartnerStatus,getPartnerServiceCatalog
 } from "../../services/partnerService";
 
 export default function PartnersPage() {
-  const [allPartners, setAllPartners] = useState([]);
+    // Backend se sirf current page ke partners milenge
+  const [partners, setPartners] = useState([]);
 
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
 
   const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [serviceCatalog, setServiceCatalog] = useState([]);
+
+  // Retry ya status update ke baad list reload karne ke liye
+  const [reload, setReload] = useState(0);
 
   const LIMIT = 10;
 
-  // Fetch partners only once
-  const fetchPartners = async () => {
-    try {
-      setLoading(true);
-      setError("");
-
-      const response = await getPartners();
-
-      setAllPartners(response.data || []);
-    } catch (error) {
-      setError(
-        error.message || "Unable to load partners."
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Catalog sirf page open hone par load karo
   useEffect(() => {
-    fetchPartners();
+    let cancelled = false;
+
+    getPartnerServiceCatalog()
+      .then((result) => {
+        if (!cancelled) {
+          setServiceCatalog(result.data || []);
+        }
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          Swal.fire({
+            icon: "error",
+            title: "Service catalog unavailable",
+            text: error.message,
+          });
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  // Search + status filter
-  const filteredPartners = useMemo(() => {
-    const searchValue = search
-      .trim()
-      .toLowerCase();
+  // Search, status, page ya reload badalne par list fetch karo
+  useEffect(() => {
+    let cancelled = false;
 
-    return allPartners.filter((partner) => {
-      const matchesSearch =
-        searchValue === "" ||
-        partner.partner_name
-          .toLowerCase()
-          .includes(searchValue) ||
-        partner.email
-          .toLowerCase()
-          .includes(searchValue) ||
-        partner.mobile.includes(searchValue);
+    setLoading(true);
+    setError("");
 
-      const matchesStatus =
-        status === "" ||
-        partner.status === status;
+    // 400ms tak koi naya change nahi hua, tab request bhejo
+    const timer = setTimeout(async () => {
+      try {
+        const result = await getPartners(
+          search,
+          status,
+          page,
+          LIMIT
+        );
 
-      return matchesSearch && matchesStatus;
-    });
-  }, [allPartners, search, status]);
+        // Purani request ka result ignore karo
+        if (cancelled) return;
 
-  // Total pages
-  const totalPages = Math.ceil(
-    filteredPartners.length / LIMIT
-  );
+        setPartners(result.data);
+        setTotalPages(result.pagination.totalPages);
+        setPage(result.pagination.page);
+      } catch (error) {
+        if (!cancelled) {
+          setError(error.message || "Unable to load partners");
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    }, 400);
 
-  // Current page data
-  const paginatedPartners = useMemo(() => {
-    const startIndex = (page - 1) * LIMIT;
+    // Naya change aaye to purana timer cancel karo
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [search, status, page, reload]);
 
-    return filteredPartners.slice(
-      startIndex,
-      startIndex + LIMIT
-    );
-  }, [filteredPartners, page]);
+  const fetchPartners = () => {
+    setReload((value) => value + 1);
+  };
 
-  // Search change
   const handleSearch = (value) => {
     setSearch(value);
     setPage(1);
   };
 
-  // Status filter change
   const handleStatusFilter = (value) => {
     setStatus(value);
     setPage(1);
   };
 
-  // Pagination
   const handlePageChange = (newPage) => {
-    setPage(newPage);
+    if (newPage >= 1 && newPage <= totalPages) {
+      setPage(newPage);
+    }
   };
-
   // Activate / deactivate
   const handleStatusChange = async (partner) => {
     const isCurrentlyActive =
@@ -152,17 +164,7 @@ export default function PartnersPage() {
         newStatus
       );
 
-      // Update local data instead of fetching again
-      setAllPartners((currentPartners) =>
-        currentPartners.map((item) =>
-          item.partner_id === partner.partner_id
-            ? {
-                ...item,
-                status: newStatus,
-              }
-            : item
-        )
-      );
+      fetchPartners();
 
       await Swal.fire({
         icon: "success",
@@ -261,7 +263,7 @@ export default function PartnersPage() {
 
           {/* Table */}
           <PartnerTable
-            partners={paginatedPartners}
+            partners={partners}
             loading={loading}
             error={error}
             page={page}
@@ -269,6 +271,7 @@ export default function PartnersPage() {
             onPageChange={handlePageChange}
             onStatusChange={handleStatusChange}
             onRetry={fetchPartners}
+            serviceCatalog={serviceCatalog}
           />
         </div>
       </div>

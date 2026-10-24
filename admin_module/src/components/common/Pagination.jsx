@@ -3,9 +3,6 @@ export default function Pagination({
   totalPages,
   onPageChange,
 }) {
-  if (totalPages <= 1) {
-    return null;
-  }
 
   return (
     <div className="flex flex-col gap-3 border-t border-gray-100 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">

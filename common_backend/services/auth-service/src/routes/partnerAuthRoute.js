@@ -16,27 +16,27 @@ const {
 } = require("../controllers/partnerAuthV2Controller");
 
 const authMiddleware = require("../middlewares/authMiddleware");
-
+const verifyCaptcha = require("../middlewares/verifyCaptcha");
 
 // ================= PARTNER AUTH =================
 
 // Register
 partnerAuthRouter.post(
-  "/api/partner/register",
+  "/api/partner/register",verifyCaptcha,
   registerPartnerV2
 );
 
 
 // Login
 partnerAuthRouter.post(
-  "/api/partner/login",
+  "/api/partner/login",verifyCaptcha,
   loginPartnerV2
 );
 
 
 // Forgot Password
 partnerAuthRouter.post(
-  "/api/partner/forgot-password",
+  "/api/partner/forgot-password",verifyCaptcha,
   forgotPasswordV2
 );
 

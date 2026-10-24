@@ -43,7 +43,6 @@ const disconnectProducer = async () => {
 };
 
 module.exports = {
-  connectProducer,
   publishEvent,
   disconnectProducer,
 };

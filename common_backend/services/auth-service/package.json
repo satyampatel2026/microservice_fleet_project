@@ -1,8 +1,8 @@
-{
+﻿{
   "name": "auth-service",
   "version": "1.0.0",
   "description": "Authentication service for Fleet Management",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
@@ -15,6 +15,7 @@
   "dependencies": {
     "axios": "^1.20.0",
     "bcrypt": "^6.0.0",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dotenv": "^18.0.6",
     "express": "^5.2.1",
@@ -27,3 +28,4 @@
     "nodemon": "^3.1.14"
   }
 }
+

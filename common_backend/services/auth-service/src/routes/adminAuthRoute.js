@@ -8,11 +8,11 @@ const {
 } = require("../controllers/adminAuthV2Controller");
 
 const authMiddleware = require("../middlewares/authMiddleware");
-
+const verifyCaptcha = require("../middlewares/verifyCaptcha");
 
 // Admin Login
 adminAuthRouter.post(
-  "/api/admin/login",
+  "/api/admin/login",verifyCaptcha,
   loginUserV2
 );
 

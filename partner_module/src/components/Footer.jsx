@@ -1,6 +1,11 @@
+
 import React from "react";
-import { Link } from "react-router-dom";
-import { Heart, ShieldCheck } from "lucide-react";
+import {
+  Heart,
+  ShieldCheck,
+  ArrowUpRight,
+  LockKeyhole,
+} from "lucide-react";
 
 const links = [
   { label: "Privacy Policy", href: "/privacy" },
@@ -11,63 +16,62 @@ const links = [
 
 const Footer = () => {
   return (
-    <footer className="mt-auto border-t border-slate-200 bg-white">
-      <div className="px-4 sm:px-6 lg:px-8 py-5">
-        
-        <div className="flex flex-col lg:flex-row items-center justify-between gap-5">
+    <footer className="mt-auto border-t border-[#E4ECEA] bg-white/95">
+      <div className="px-4 py-3 sm:px-6 lg:px-7">
+        <div className="flex flex-col items-center justify-between gap-3 xl:flex-row xl:gap-5">
 
-          {/* Left - Copyright */}
-          <div className="flex items-center gap-2 text-xs text-slate-500">
+          {/* COPYRIGHT */}
+          <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[11px] text-slate-500 xl:justify-start">
             <span>
               © {new Date().getFullYear()}{" "}
-              <span className="font-semibold text-slate-700">
-                FleetPartner
+              <span className="font-extrabold tracking-tight text-[#092B31]">
+                FLEET<span className="text-teal-600">ROVA</span>
               </span>
               . All rights reserved.
             </span>
 
-            <span className="hidden sm:inline text-slate-300">
+            <span className="hidden text-slate-300 sm:inline">
               |
             </span>
 
-            <span className="hidden sm:flex items-center gap-1">
+            <span className="hidden items-center gap-1 sm:inline-flex">
               Crafted with
               <Heart
-                className="w-3 h-3 text-red-500 fill-red-500"
+                size={12}
+                className="fill-rose-500 text-rose-500"
               />
-              for workshops
+              for partners
             </span>
           </div>
 
-          {/* Center - Links */}
-          <nav className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
-            {links.map((link) => (
-              <Link
-                key={link.label}
-                to={link.href}
-                className="text-xs font-medium text-slate-500 hover:text-blue-600 transition-colors"
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
+          {/* FOOTER LINKS */}
+          <nav
+  aria-label="Footer navigation"
+  className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2"
+>
+  {links.map((link) => (
+    <span
+      key={link.label}
+      className="group inline-flex items-center gap-1 text-[11px] font-medium text-slate-500"
+    >
+      {link.label}
+    </span>
+  ))}
+</nav>
+          {/* SECURITY STATUS */}
+          <div className="flex shrink-0 items-center gap-2">
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-teal-100 bg-[#F0FAF7] px-2.5 py-1.5">
+              <LockKeyhole
+                size={12}
+                className="text-teal-700"
+              />
 
-          {/* Right - System Status */}
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-100">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
-            </span>
-
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-
-            <span className="text-xs font-medium text-emerald-700">
-              All systems operational
-            </span>
+              <span className="text-[10px] font-semibold text-teal-800">
+                Secure Partner Portal
+              </span>
+            </div>
           </div>
-
         </div>
-
       </div>
     </footer>
   );

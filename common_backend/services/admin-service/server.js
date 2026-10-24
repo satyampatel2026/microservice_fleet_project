@@ -9,6 +9,9 @@ const departmentRouter = require("./src/routes/departmentRoute");
 const roleRouter = require("./src/routes/roleRoute");
 const dashboardRouter = require("./src/routes/dashboardRoute");
 const internalAuthRouter = require("./src/routes/internalAuthRoute");
+const categoryRouter = require("./src/routes/categoryRoute");
+const serviceRouter = require("./src/routes/serviceRoute");
+const internalCatalogRouter = require("./src/routes/internalCatalogRoute");
 
 const app = express();
 
@@ -35,13 +38,13 @@ app.use(cookieParser());
 // ================= ROUTES =================
 
 app.use("/", userRouter);
-
 app.use("/", departmentRouter);
-
 app.use("/", roleRouter);
-
 app.use("/", dashboardRouter);
 app.use("/", internalAuthRouter);
+app.use("/", categoryRouter);
+app.use("/", serviceRouter);
+app.use("/", internalCatalogRouter);
 
 
 // ================= HEALTH CHECK =================

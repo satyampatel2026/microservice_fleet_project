@@ -5,6 +5,8 @@ import Dashboard from "./pages/Dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ForgotPassword from "./pages/ForgotPassword";
 import PartnerKyc from "./pages/PartnerKyc";
+import MyServices from "./pages/MyServices";
+import Employees from "./pages/Employees";
 
 function App() {
   return (
@@ -18,6 +20,8 @@ function App() {
       <Route element={<ProtectedRoute />}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/partner/kyc" element={<PartnerKyc />} /> {/* KYC ko bhi yahan shift kar diya */}
+        <Route path="/partner/services" element={<MyServices />} />
+        <Route path="/partner/employees" element={<Employees />} />
       </Route>
 
       {/* Catch-all route */}

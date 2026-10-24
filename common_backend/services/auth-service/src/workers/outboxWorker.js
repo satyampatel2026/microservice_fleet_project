@@ -50,33 +50,38 @@ const publishPendingEvents = async () => {
 };
 
 let running = false;
+let processingPromise = null;
 
 const startOutboxWorker = () => {
   if (running) return;
 
   running = true;
 
-  const timer = setInterval(async () => {
-    if (running === "processing") return;
+  const timer = setInterval(() => {
+    if (!running || processingPromise) return;
 
-    running = "processing";
-
-    try {
-      await publishPendingEvents();
-    } catch (error) {
-      console.error("Outbox worker error:", error.message);
-    } finally {
-      running = true;
-    }
+    processingPromise = publishPendingEvents()
+      .catch((error) => {
+        console.error("Outbox worker error:", error.message);
+      })
+      .finally(() => {
+        processingPromise = null;
+      });
   }, 3000);
 
-  return () => {
+  return async () => {
+    // Prevent new processing cycles
     running = false;
     clearInterval(timer);
+
+    // Wait for current processing to finish
+    if (processingPromise) {
+      await processingPromise;
+    }
+
+    console.log("Auth Service Outbox Worker stopped");
   };
 };
-
 module.exports = {
-  publishPendingEvents,
   startOutboxWorker,
 };

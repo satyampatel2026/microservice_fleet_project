@@ -15,6 +15,7 @@ const {
 const adminAuthMiddleware = require(
   "../middlewares/adminAuthMiddleware"
 );
+const requireAdminRole = require("../middlewares/requireAdminRole");
 
 // ================= ROLES =================
 
@@ -27,21 +28,21 @@ roleRouter.get(
 
 // Add role
 roleRouter.post(
-  "/api/admin/roles",adminAuthMiddleware,
+  "/api/admin/roles",adminAuthMiddleware,requireAdminRole,
   postRole
 );
 
 
 // Update role
 roleRouter.put(
-  "/api/admin/roles",adminAuthMiddleware,
+  "/api/admin/roles",adminAuthMiddleware,requireAdminRole,
   updateRole
 );
 
 
 // Delete role
 roleRouter.delete(
-  "/api/admin/roles",adminAuthMiddleware,
+  "/api/admin/roles",adminAuthMiddleware,requireAdminRole,
   deleteRole
 );
 
@@ -57,14 +58,14 @@ roleRouter.get(
 
 // Assign role to user
 roleRouter.post(
-  "/api/admin/user-roles",adminAuthMiddleware,
+  "/api/admin/user-roles",adminAuthMiddleware,requireAdminRole,
   postUserRole
 );
 
 
 // Remove role from user
 roleRouter.delete(
-  "/api/admin/user-roles",adminAuthMiddleware,
+  "/api/admin/user-roles",adminAuthMiddleware,requireAdminRole,
   deleteUserRole
 );
 

@@ -2,7 +2,7 @@
   "name": "partner-service",
   "version": "1.0.0",
   "description": "Partner and KYC service for Fleet Management",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
@@ -13,7 +13,7 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "bcrypt": "^6.0.0",
+    "axios": "^1.20.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dotenv": "^18.0.5",
@@ -21,8 +21,7 @@
     "jsonwebtoken": "^9.0.3",
     "kafkajs": "^2.2.4",
     "multer": "^2.4.0",
-    "mysql2": "^3.24.5",
-    "nodemailer": "^10.0.15"
+    "mysql2": "^3.24.5"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"

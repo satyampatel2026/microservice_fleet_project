@@ -1,7 +1,6 @@
 const connection = require("../model/db");
 const fs = require("fs");
 
-
 // ================= SUBMIT / UPDATE KYC =================
 
 const submitKyc = async (req, res) => {

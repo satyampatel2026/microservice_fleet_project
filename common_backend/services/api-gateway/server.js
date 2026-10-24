@@ -12,8 +12,7 @@ app.use(cors({
   origin: [
     "http://localhost:5173",
     "http://localhost:5174",
-    "http://127.0.0.1:5173",
-    "http://127.0.0.1:5174",
+    "http://localhost:5175"
   ],
   credentials: true,
 }));
@@ -64,6 +63,8 @@ app.use(
     "/api/admin/partners",
     "/api/admin/kyc",
     "/api/partner/kyc",
+    "/api/partner/my-services",
+    "/api/partners/me"
   ],
   proxyTo(process.env.PARTNER_SERVICE_URL)
 );
@@ -79,6 +80,9 @@ app.use(
     "/api/admin/roles",
     "/api/admin/user-roles",
     "/api/admin/dashboard",
+    "/api/admin/categories",
+    "/api/admin/services",
+    "/api/partner/service-catalog",
   ],
   proxyTo(process.env.USER_SERVICE_URL)
 );

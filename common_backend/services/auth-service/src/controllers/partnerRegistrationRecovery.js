@@ -134,7 +134,6 @@ return {
         }
       );
 
-      if (response.data?.success === true) {
        if (response.data?.success === true) {
   await activatePartnerWithEvent(partnerId, normalizedEmail);
 
@@ -143,7 +142,6 @@ return {
     partnerId,
   };
 }
-      }
     }
 
     console.warn("Partner registration remains incomplete:", {

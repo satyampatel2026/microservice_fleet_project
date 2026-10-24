@@ -64,6 +64,7 @@ const loginPartnerV2 = async (req, res) => {
     );
 
     const partner = partnerResponse.data.data;
+    
 
     if (
       partner.status !== "active" ||

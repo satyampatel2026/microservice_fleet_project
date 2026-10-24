@@ -1,4 +1,3 @@
-// src/components/admin/roles/RoleStats.jsx
 
 import {
   Search,
@@ -29,9 +28,10 @@ export default function RoleStats({
       label: "Total roles",
       value: roles.length,
       text: "Roles available in system",
-      icon: <UsersRound size={18} />,
+      icon: <UsersRound size={20} strokeWidth={1.8} />,
       className:
-        "bg-indigo-50 text-indigo-600",
+        "border-indigo-200/70 bg-indigo-50 text-indigo-600 " +
+        "dark:border-indigo-400/15 dark:bg-indigo-400/10 dark:text-indigo-400",
     },
     {
       label: "Search results",
@@ -39,53 +39,58 @@ export default function RoleStats({
       text: searchTerm
         ? "Matching current search"
         : "All roles visible",
-      icon: <Search size={18} />,
+      icon: <Search size={20} strokeWidth={1.8} />,
       className:
-        "bg-cyan-50 text-cyan-600",
+        "border-cyan-200/70 bg-cyan-50 text-cyan-600 " +
+        "dark:border-cyan-400/15 dark:bg-cyan-400/10 dark:text-cyan-400",
     },
     {
       label: "Latest role",
       value: latestRole,
       text: "Most recently added",
-      icon: <Sparkles size={18} />,
+      icon: <Sparkles size={20} strokeWidth={1.8} />,
       className:
-        "bg-amber-50 text-amber-600",
+        "border-amber-200/70 bg-amber-50 text-amber-600 " +
+        "dark:border-amber-400/15 dark:bg-amber-400/10 dark:text-amber-400",
       isText: true,
     },
   ];
 
   return (
-    // Grid columns ko adjust kiya hai taaki cards bahut zyada stretch na ho
-    <section className="mb-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {cards.map((card) => (
         <div
           key={card.label}
-          // max-w aur proper spacing se cards professional aur structured lagenge
-          className="w-full rounded-2xl border border-slate-200 bg-white p-4.5 shadow-sm transition hover:border-slate-300"
+          className="group min-w-0 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_6px_24px_rgba(15,23,42,0.10)] transition-all duration-300 hover:-translate-y-0.5 hover:border-violet-200 hover:shadow-[0_12px_32px_rgba(15,23,42,0.16)] dark:border-white/[0.08] dark:bg-[#191e2d] dark:shadow-[0_8px_28px_rgba(0,0,0,0.30)] dark:hover:border-violet-400/20 dark:hover:shadow-[0_14px_36px_rgba(0,0,0,0.42)] sm:p-5"
         >
           <div className="flex items-center justify-between gap-3">
+            {/* Metric Details */}
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
                 {card.label}
               </p>
 
               <p
-                className={`mt-1 truncate font-bold text-slate-900 ${
+                title={card.isText ? String(card.value) : undefined}
+                className={`mt-2 truncate font-bold tracking-tight text-slate-900 dark:text-white ${
                   card.isText
-                    ? "text-base capitalize"
-                    : "text-2xl"
+                    ? "text-lg capitalize"
+                    : "text-3xl"
                 }`}
               >
-                {card.value}
+                {card.isText
+                  ? card.value
+                  : card.value.toLocaleString("en-IN")}
               </p>
 
-              <p className="mt-0.5 text-[11px] text-slate-500">
+              <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
                 {card.text}
               </p>
             </div>
 
+            {/* Metric Icon */}
             <div
-              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${card.className}`}
+              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border transition-transform duration-300 group-hover:scale-105 ${card.className}`}
             >
               {card.icon}
             </div>

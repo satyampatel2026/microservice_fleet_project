@@ -8,6 +8,8 @@ import Roles from "./pages/admin/Roles";
 import PartnersPage from "./pages/partners/PartnersPage";
 import KycPage from "./pages/partners/KycPage";
 import Login from "./pages/admin/Login";
+import Categories from "./pages/admin/Categories";
+import Services from "./pages/admin/Services";
 
 function App() {
   return (
@@ -23,6 +25,8 @@ function App() {
         <Route path="roles" element={<Roles />} />
         <Route path="partnerspage" element={<PartnersPage/>}/>
         <Route path="Kycpage" element={<KycPage/>}/>
+        <Route path="categories" element={<Categories />} />
+        <Route path="services" element={<Services />} />
       </Route>
       </Route>
       <Route path="*" element={<Navigate to="/admin/adminlogin" replace />}/>

@@ -3,7 +3,6 @@ const { startConsumer, stopConsumer } = require("./src/config/kafka");
 const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
-const path = require("path");
 
 const partnerKycRouter = require(
   "./src/routes/partnerKycRoute"
@@ -19,6 +18,10 @@ const adminKycRouter = require(
 const internalPartnerRouter = require(
   "./src/routes/internalPartnerRoute"
 );
+const partnerServicesRouter = require(
+  "./src/routes/partnerServicesRoute"
+);
+const partnerEmployeeRouter = require("./src/routes/partnerEmployeeRoute");
 
 const app = express();
 
@@ -56,7 +59,8 @@ app.use("/", adminKycRouter);
 
 // Internal Service Communication
 app.use("/", internalPartnerRouter);
-
+app.use("/", partnerServicesRouter);
+app.use("/",partnerEmployeeRouter);
 
 // ================= HEALTH CHECK =================
 
@@ -65,28 +69,60 @@ app.get("/health", (req, res) => {
     success: true,
     service: "partner-service",
     message: "Partner service is running",
-  });
+  }); 
 });
-
-
 // ================= SERVER =================
 
-app.listen(PORT, () => {
-  console.log(
-    `Partner service is running on port ${PORT}`
-  );
+const server = app.listen(PORT, () => {
+  console.log(`Partner service is running on port ${PORT}`);
 });
 
-startConsumer().catch((error) => {
-  console.error("Kafka consumer startup failed:", error.message);
-});
+let consumerStarted = false;
 
-process.on("SIGINT", async () => {
+const consumerStartupPromise = startConsumer()
+  .then(() => {
+    consumerStarted = true;
+  })
+  .catch((error) => {
+    console.error("Kafka consumer startup failed:", error.message);
+  });
+
+// ================= GRACEFUL SHUTDOWN =================
+
+let isShuttingDown = false;
+
+const gracefulShutdown = async (signal) => {
+  if (isShuttingDown) return;
+  isShuttingDown = true;
+
+  console.log(`${signal} received. Shutting down Partner Service...`);
+
+  try {
+    // Stop accepting new HTTP connections
+    await new Promise((resolve, reject) => {
+      server.close((error) => {
+        if (error) reject(error);
+        else resolve();
+      });
+    });
+
+    // Disconnect Kafka consumer
+    // Wait for Kafka consumer startup to settle
+await consumerStartupPromise;
+
+// Disconnect Kafka consumer if started successfully
+if (consumerStarted) {
   await stopConsumer();
-  process.exit(0);
-});
+  console.log("Partner Service Kafka consumer stopped");
+}
 
-process.on("SIGTERM", async () => {
-  await stopConsumer();
-  process.exit(0);
-});
+    console.log("Partner Service shut down successfully.");
+    process.exit(0);
+  } catch (error) {
+    console.error("Partner Service shutdown failed:", error.message);
+    process.exit(1);
+  }
+};
+
+process.on("SIGINT", () => gracefulShutdown("SIGINT"));
+process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));

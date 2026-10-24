@@ -1,15 +1,15 @@
-const crypto = require("crypto");
 const db = require("../model/db");
 
 const handlePartnerEvent = async (event) => {
-  if (
-    !event ||
-    typeof event.eventId !== "string" ||
-    !crypto.randomUUID ||
-    typeof event.eventType !== "string"
-  ) {
-    throw new Error("Invalid Kafka event");
-  }
+ if (
+  !event ||
+  typeof event.eventId !== "string" ||
+  event.eventId.trim() === "" ||
+  typeof event.eventType !== "string" ||
+  event.eventType.trim() === ""
+) {
+  throw new Error("Invalid Kafka event");
+}
 
   // Filhaal sirf registered event handle hoga
   if (event.eventType !== "PartnerRegistered") {

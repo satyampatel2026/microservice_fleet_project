@@ -1,16 +1,66 @@
-import { NavLink } from "react-router-dom";
+
+import { Link, NavLink, useLocation } from "react-router-dom";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {Handshake} from "lucide-react"
-import { FiHome,FiUsers,FiLayers,FiShield,FiTruck,FiAward,FiChevronRight,FiChevronDown,FiX} from "react-icons/fi";
+import {
+  LayoutDashboard,
+  UsersRound,
+  Layers3,
+  ShieldCheck,
+  Handshake,
+  FolderKanban,
+  ChevronRight,
+  ChevronDown,
+  X,
+  ArrowUpRight,
+  Sparkles,
+} from "lucide-react";
 
 const navItems = [
-  { to: "/admin/dashboard", label: "Dashboard", icon: FiHome },
-  { to: "/admin/adminuser", label: "User Management", icon: FiUsers },
-  { to: "/admin/department", label: "Department", icon: FiLayers },
-  { to: "/admin/roles", label: "Roles", icon: FiShield },
-  { to: "/admin/partnerspage", label: "Partners Management", icon: Handshake },
-  { to: "/admin/kycpage", label: "Partners Kyc", icon: FiShield },
+  {
+    to: "/admin/dashboard",
+    label: "Dashboard",
+    icon: LayoutDashboard,
+  },
+  {
+    to: "/admin/adminuser",
+    label: "User Management",
+    icon: UsersRound,
+  },
+  {
+    to: "/admin/department",
+    label: "Department",
+    icon: Layers3,
+  },
+  {
+    to: "/admin/roles",
+    label: "Roles",
+    icon: ShieldCheck,
+  },
+  {
+    label: "Service Management",
+    icon: FolderKanban,
+    children: [
+      {
+        to: "/admin/categories",
+        label: "Categories",
+      },
+      {
+        to: "/admin/services",
+        label: "Services",
+      },
+    ],
+  },
+  {
+    to: "/admin/partnerspage",
+    label: "Partners Management",
+    icon: Handshake,
+  },
+  {
+    to: "/admin/kycpage",
+    label: "Partners KYC",
+    icon: ShieldCheck,
+  },
 ];
 
 export default function AdminSidebar({ open, onClose }) {
@@ -18,8 +68,8 @@ export default function AdminSidebar({ open, onClose }) {
 
   return (
     <>
-      {/* Desktop */}
-      <div className="hidden lg:block fixed inset-y-0 left-0 z-30">
+      {/* Desktop sidebar */}
+      <div className="fixed inset-y-0 left-0 z-30 hidden lg:block">
         <SidebarContent
           openMenus={openMenus}
           setOpenMenus={setOpenMenus}
@@ -27,133 +77,226 @@ export default function AdminSidebar({ open, onClose }) {
         />
       </div>
 
-      {/* Mobile */}
-      <AnimatePresence mode="wait">
-  {open && (
-    <>
-      {/* Overlay */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[60] bg-slate-900/50 backdrop-blur-sm lg:hidden"
-        onClick={onClose}
-      />
+      {/* Mobile sidebar */}
+      <AnimatePresence>
+        {open && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={onClose}
+              className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm lg:hidden"
+            />
 
-      {/* Mobile Sidebar */}
-      <motion.div
-        initial={{ x: "-100%" }}
-        animate={{ x: 0 }}
-        exit={{ x: "-100%" }}
-        transition={{ duration: 0.3 }}
-        className="fixed inset-y-0 left-0 z-[70] w-72 lg:hidden"
-      >
-        <SidebarContent
-          openMenus={openMenus}
-          setOpenMenus={setOpenMenus}
-          onClose={onClose}
-        />
-      </motion.div>
-    </>
-  )}
-</AnimatePresence>
+            <motion.div
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{
+                type: "spring",
+                stiffness: 300,
+                damping: 30,
+              }}
+              className="fixed inset-y-0 left-0 z-[70] w-72 lg:hidden"
+            >
+              <SidebarContent
+                openMenus={openMenus}
+                setOpenMenus={setOpenMenus}
+                onClose={onClose}
+              />
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </>
   );
 }
 
 function SidebarContent({ openMenus, setOpenMenus, onClose }) {
+  const location = useLocation();
+
+  const isServicesActive = navItems
+    .find((item) => item.label === "Service Management")
+    ?.children?.some((child) => location.pathname === child.to);
+
+  const servicesOpen =
+    openMenus["Service Management"] ?? isServicesActive;
+
+  const toggleMenu = (label) => {
+    setOpenMenus((prev) => ({
+      ...prev,
+      [label]: !(prev[label] ?? isServicesActive),
+    }));
+  };
+
   return (
-    <aside className="flex flex-col h-full w-72 glass border-r border-slate-200/50 dark:border-slate-700/50">
-      {/* Header */}
-      <div className="flex items-center justify-between p-6">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center">
-            <FiTruck size={22} color="white" />
-          </div>
+    <aside className="flex h-full w-72 flex-col border-r border-white/[0.08] bg-[#10131e] text-white shadow-2xl shadow-black/20">
+      {/* Brand header */}
+      <div className="flex h-24 shrink-0 items-center justify-between gap-2 border-b border-white/[0.08] px-5">
+        <Link
+          to="/admin/dashboard"
+          onClick={onClose}
+          aria-label="FLEETROVA Admin Dashboard"
+          className="flex min-w-0 flex-1 flex-col items-start justify-center"
+        >
+          <img
+            src="/fleetrova-logo.png"
+            alt="FLEETROVA"
+            className="h-14 max-w-full object-contain object-left"
+          />
 
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="font-bold text-lg text-slate-900 dark:text-white">
-                Fleetrova
-              </h3>
-              <FiAward className="w-5 h-5 text-yellow-500" />
-              <FiChevronRight className="w-4 h-4 text-brand-600" />
-            </div>
+          <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-violet-300/70">
+            Enterprise Admin
+          </span>
+        </Link>
 
-            <p className="text-xs text-slate-500">Enterprise Admin</p>
-          </div>
-        </div>
-
-       <button onClick={onClose} className="block lg:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"><FiX className="w-5 h-5" />
-</button>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close sidebar"
+          className="rounded-lg p-2 text-gray-400 transition hover:bg-white/10 hover:text-white lg:hidden"
+        >
+          <X size={20} />
+        </button>
       </div>
 
-      {/* Menu */}
-      <nav className="flex-1 px-4 py-3 space-y-2 overflow-y-auto">
-        {navItems.map((item) => (
-          item.children ? (
-            <div key={item.label}>
-              <button
-                onClick={() =>
-                  setOpenMenus({
-                    ...openMenus,
-                    [item.label]: !openMenus[item.label],
-                  })
-                }
-                className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
-              >
-                <div className="flex items-center gap-3">
-                  <item.icon className="w-[18px] h-[18px]" />
-                  {item.label}
-                </div>
+      {/* Navigation */}
+      <div className="flex-1 overflow-y-auto px-3 py-7">
+        <p className="mb-4 px-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-500">
+          Workspace
+        </p>
 
-                {openMenus[item.label] ? (
-                  <FiChevronDown />
-                ) : (
-                  <FiChevronRight />
-                )}
-              </button>
+        <nav className="space-y-1.5" aria-label="Admin navigation">
+          {navItems.map((item) => {
+            const Icon = item.icon;
 
-              {openMenus[item.label] &&
-                item.children.map((child) => (
-                  <NavLink
-                    key={child.to}
-                    to={child.to}
-                    onClick={onClose}
-                    className="group flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 text-slate-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-800 hover:text-blue-600 hover:translate-x-2"
+            if (item.children) {
+              const isOpen =
+                item.label === "Service Management"
+                  ? servicesOpen
+                  : openMenus[item.label];
+
+              const childActive = item.children.some(
+                (child) => location.pathname === child.to
+              );
+
+              return (
+                <div key={item.label}>
+                  <button
+                    type="button"
+                    onClick={() => toggleMenu(item.label)}
+                    aria-expanded={Boolean(isOpen)}
+                    className={`group flex w-full items-center justify-between gap-3 rounded-xl px-3.5 py-3 text-sm font-medium transition-all duration-200 ${
+                      childActive
+                        ? "bg-violet-500/15 text-violet-200"
+                        : "text-gray-400 hover:bg-white/[0.06] hover:text-white"
+                    }`}
                   >
-                    {child.label}
-                  </NavLink>
-                ))}
-            </div>
-          ) : (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              onClick={onClose}
-              className={({ isActive }) =>
-                `group relative flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 ${
-                  isActive
-                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg"
-                    : "text-slate-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-800 hover:text-blue-600 hover:translate-x-2"
-                }`
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  {isActive && (
-                    <span className="absolute left-0 top-2 bottom-2 w-1 rounded-r-full bg-yellow-400"></span>
-                  )}
+                    <span className="flex min-w-0 items-center gap-3">
+                      <Icon
+                        size={20}
+                        strokeWidth={1.8}
+                        className="shrink-0"
+                      />
+                      <span className="truncate">{item.label}</span>
+                    </span>
 
-                  <item.icon className="w-5 h-5 transition-all duration-300 group-hover:scale-110 group-hover:rotate-6" />
+                    {isOpen ? (
+                      <ChevronDown size={16} />
+                    ) : (
+                      <ChevronRight size={16} />
+                    )}
+                  </button>
 
-                  <span>{item.label}</span>
-                </>
-              )}
-            </NavLink>
-          )
-        ))}
-      </nav>
+                  <AnimatePresence initial={false}>
+                    {isOpen && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="ml-6 mt-2 space-y-1 border-l border-white/10 pl-4">
+                          {item.children.map((child) => (
+                            <NavLink
+                              key={child.to}
+                              to={child.to}
+                              onClick={onClose}
+                              className={({ isActive }) =>
+                                `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all ${
+                                  isActive
+                                    ? "bg-violet-500/15 font-medium text-violet-200"
+                                    : "text-gray-500 hover:bg-white/[0.05] hover:text-white"
+                                }`
+                              }
+                            >
+                              {({ isActive }) => (
+                                <>
+                                  <span
+                                    className={`h-1.5 w-1.5 shrink-0 rounded-full ${
+                                      isActive
+                                        ? "bg-violet-400"
+                                        : "bg-gray-600"
+                                    }`}
+                                  />
+                                  {child.label}
+                                </>
+                              )}
+                            </NavLink>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              );
+            }
+
+            return (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                onClick={onClose}
+                className={({ isActive }) =>
+                  `group relative flex items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-medium transition-all duration-200 ${
+                    isActive
+                      ? "bg-violet-500/15 text-violet-200"
+                      : "text-gray-400 hover:bg-white/[0.06] hover:text-white"
+                  }`
+                }
+              >
+                {({ isActive }) => (
+                  <>
+                    {isActive && (
+                      <span className="absolute bottom-2 left-0 top-2 w-[3px] rounded-r-full bg-violet-400" />
+                    )}
+
+                    <Icon
+                      size={20}
+                      strokeWidth={1.8}
+                      className={`shrink-0 ${
+                        isActive
+                          ? "text-violet-300"
+                          : "text-gray-500 group-hover:text-gray-200"
+                      }`}
+                    />
+
+                    <span className="min-w-0 flex-1 truncate">
+                      {item.label}
+                    </span>
+
+                    {isActive && (
+                      <span className="h-1.5 w-1.5 rounded-full bg-violet-400" />
+                    )}
+                  </>
+                )}
+              </NavLink>
+            );
+          })}
+        </nav>
+      </div>
     </aside>
   );
 }
