@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import {
@@ -174,33 +173,25 @@ export default function Services() {
   };
   
 return (
-  <div className="w-full space-y-5 sm:space-y-6">
-    {/* Page Header */}
-    <section className="relative overflow-hidden rounded-2xl border border-violet-400/15 bg-gradient-to-r from-[#151a2b] via-[#211b40] to-[#151a2b] px-5 py-4 shadow-[0_8px_28px_rgba(39,29,90,0.22)] transition-shadow duration-300 hover:shadow-[0_12px_34px_rgba(39,29,90,0.30)] sm:px-6">
-      <div className="relative flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-violet-300">
-            Service Management
-          </p>
-
-          <h3 className="mt-1 text-lg font-bold tracking-tight text-white sm:text-xl">
-            Category Services
-          </h3>
-
-          <p className="mt-1 text-xs text-slate-300">
-            Manage services offered by partners
-          </p>
-        </div>
-
-        <button
-          type="button"
-          onClick={openAddForm}
-          className="self-start rounded-xl border border-violet-400/25 bg-violet-500/20 px-4 py-2.5 text-xs font-semibold text-white transition-all hover:bg-violet-500/35 active:scale-[0.98] sm:self-auto"
-        >
-          + Add Service
-        </button>
+  <div className="w-full space-y-3">
+    <header className="flex flex-wrap items-center justify-between gap-3">
+      <div>
+        <h3 className="text-[15px] font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+          Category Services
+        </h3>
+        <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+          Manage services offered by partners
+        </p>
       </div>
-    </section>
+
+      <button
+        type="button"
+        onClick={openAddForm}
+        className="ml-auto inline-flex h-9 items-center justify-center rounded-lg bg-violet-600 px-3.5 text-xs font-semibold text-white transition hover:bg-violet-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500"
+      >
+        + Add Service
+      </button>
+    </header>
 
     {/* Services Table */}
     <section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_6px_24px_rgba(15,23,42,0.10)] transition-shadow duration-300 hover:shadow-[0_12px_32px_rgba(15,23,42,0.15)] dark:border-white/[0.08] dark:bg-[#191e2d] dark:shadow-[0_8px_28px_rgba(0,0,0,0.30)]">

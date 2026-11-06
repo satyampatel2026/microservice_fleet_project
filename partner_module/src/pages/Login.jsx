@@ -9,7 +9,6 @@ import {
   ArrowRight,
   ArrowUpRight,
   BarChart3,
-  Check,
   CheckCircle2,
   Eye,
   EyeOff,
@@ -20,8 +19,6 @@ import {
   Sparkles,
   TrendingUp,
   Truck,
-  UsersRound,
-  Wallet,
   Loader2,
 } from "lucide-react";
 
@@ -42,13 +39,6 @@ const Toast = Swal.mixin({
     htmlContainer: "!text-xs !text-slate-500",
   },
 });
-
-const features = [
-  { icon: Truck, label: "Service management" },
-  { icon: UsersRound, label: "Employee management" },
-  { icon: Wallet, label: "Expense tracking" },
-  { icon: BarChart3, label: "Reports & analytics" },
-];
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -128,7 +118,7 @@ const captchaRef = useRef(null);
     formik.errors.password;
 
   return (
-    <div className="min-h-screen bg-[#F5F8F7] font-sans text-slate-900 selection:bg-teal-100 selection:text-teal-900">
+    <div className="min-h-[100dvh] bg-[#F5F8F7] font-sans text-slate-900 lg:h-[100dvh] lg:overflow-hidden selection:bg-teal-100 selection:text-teal-900">
       <style>{`
         @keyframes partnerFadeUp {
           from {
@@ -186,6 +176,19 @@ const captchaRef = useRef(null);
           animation: partnerShine 1.1s ease-in-out;
         }
 
+        @media (min-width: 1024px) and (max-height: 740px) {
+          .partner-preview { margin-top: 12px; }
+          .partner-eyebrow { display: none; }
+          .partner-heading-icon { display: none; }
+          .partner-heading { margin-bottom: 12px; }
+          .partner-trust { margin-top: 10px; }
+        }
+        @media (min-width: 1024px) and (max-height: 640px) {
+          .partner-preview { display: none; }
+          .partner-form-area { padding-top: 10px; padding-bottom: 10px; }
+          .partner-form-card { padding: 14px; }
+          .partner-trust { display: none; }
+        }
         @media (prefers-reduced-motion: reduce) {
           .partner-fade-up,
           .partner-float,
@@ -196,9 +199,9 @@ const captchaRef = useRef(null);
         }
       `}</style>
 
-      <div className="flex min-h-screen">
+      <div className="flex min-h-[100dvh] lg:h-[100dvh] lg:min-h-0 lg:overflow-hidden">
         {/* LEFT BRAND PANEL */}
-        <aside className="relative hidden min-h-screen w-[52%] flex-col overflow-hidden bg-[#071B22] px-10 py-9 text-white lg:flex xl:px-16 xl:py-11">
+        <aside className="relative hidden h-[100dvh] w-[52%] shrink-0 flex-col overflow-hidden bg-[#071B22] px-8 py-5 text-white lg:flex xl:px-12 xl:py-6">
           {/* Ambient Glow */}
           <div className="pointer-events-none absolute inset-0 overflow-hidden">
             <div className="partner-glow absolute -left-40 top-32 h-[420px] w-[420px] rounded-full bg-teal-500/15 blur-[110px]" />
@@ -216,14 +219,14 @@ const captchaRef = useRef(null);
 
           
 {/* Brand */}
-<div className="relative z-10 flex items-center gap-3">
+<div className="relative z-10 flex shrink-0 items-center gap-3">
   <img
     src="/fleetrova-logo.png"
     alt="FLEETROVA"
-    className="h-14 w-auto max-w-[230px] object-contain drop-shadow-[0_8px_20px_rgba(20,184,166,0.18)] transition-transform duration-300 hover:scale-[1.03]"
+    className="h-10 w-auto max-w-[180px] object-contain drop-shadow-[0_8px_20px_rgba(20,184,166,0.18)] transition-transform duration-300 hover:scale-[1.03]"
   />
 
-  <div className="border-l border-white/20 pl-3">
+  <div className="shrink-0 border-l border-white/20 pl-3">
     <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-teal-300">
       Partner Portal
     </p>
@@ -234,29 +237,29 @@ const captchaRef = useRef(null);
 </div>
 
           {/* Main Content */}
-          <div className="relative z-10 my-auto py-12">
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-teal-400/20 bg-teal-400/[0.08] px-3.5 py-2 text-[11px] font-semibold tracking-wide text-teal-300">
+          <div className="relative z-10 pt-5 pb-3">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-teal-400/20 bg-teal-400/[0.08] px-3.5 py-2 text-[11px] font-semibold tracking-wide text-teal-300">
               <Sparkles size={13} />
               YOUR BUSINESS. ONE WORKSPACE.
             </div>
 
-            <h1 className="max-w-[590px] text-[clamp(2.5rem,3.8vw,4.4rem)] font-bold leading-[1.12] tracking-[-0.045em]">
+            <h1 className="max-w-[590px] text-[clamp(2rem,3vw,3.4rem)] font-bold leading-[1.12] tracking-[-0.045em]">
               Run your fleet.
               <span className="mt-1 block bg-gradient-to-r from-[#5EEAD4] via-[#2DD4BF] to-[#D6B77B] bg-clip-text text-transparent">
                 Grow your business.
               </span>
             </h1>
 
-            <p className="mt-6 max-w-[440px] text-sm leading-7 text-slate-400 xl:text-base">
+            <p className="mt-3 max-w-[440px] text-sm leading-6 text-slate-400">
               Your command center for smarter operations.
               Manage services, teams, expenses and business
               insights in one seamless workspace.
             </p>
 
             {/* Dashboard Preview - Decorative */}
-            <div className="partner-float relative mt-10 max-w-[530px]">
-              <div className="rounded-[26px] border border-white/[0.12] bg-white/[0.07] p-4 shadow-[0_30px_80px_rgba(0,0,0,0.28)] backdrop-blur-xl xl:p-5">
-                <div className="mb-5 flex items-center justify-between">
+            <div className="partner-preview partner-float relative mt-4 max-w-[530px]">
+              <div className="rounded-[20px] border border-white/[0.12] bg-white/[0.07] p-3 shadow-[0_30px_80px_rgba(0,0,0,0.28)] backdrop-blur-xl xl:p-3">
+                <div className="mb-3 flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
                     <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-teal-400/15 text-teal-300">
                       <BarChart3 size={18} />
@@ -277,8 +280,8 @@ const captchaRef = useRef(null);
                   </span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="rounded-2xl border border-white/[0.08] bg-white/[0.06] p-4">
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="rounded-2xl border border-white/[0.08] bg-white/[0.06] p-2.5">
                     <div className="flex items-center justify-between">
                       <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-400/15 text-teal-300">
                         <Truck size={16} />
@@ -286,15 +289,15 @@ const captchaRef = useRef(null);
                       <ArrowUpRight size={15} className="text-teal-400" />
                     </div>
 
-                    <p className="mt-4 text-[11px] text-slate-400">
+                    <p className="mt-2 text-[11px] text-slate-400">
                       Service operations
                     </p>
-                    <p className="mt-1 text-lg font-bold text-white">
+                    <p className="mt-1 text-base font-bold text-white">
                       Simplified
                     </p>
                   </div>
 
-                  <div className="rounded-2xl border border-white/[0.08] bg-white/[0.06] p-4">
+                  <div className="rounded-2xl border border-white/[0.08] bg-white/[0.06] p-2.5">
                     <div className="flex items-center justify-between">
                       <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-400/15 text-[#D6B77B]">
                         <TrendingUp size={16} />
@@ -302,16 +305,16 @@ const captchaRef = useRef(null);
                       <ArrowUpRight size={15} className="text-[#D6B77B]" />
                     </div>
 
-                    <p className="mt-4 text-[11px] text-slate-400">
+                    <p className="mt-2 text-[11px] text-slate-400">
                       Business insights
                     </p>
-                    <p className="mt-1 text-lg font-bold text-white">
+                    <p className="mt-1 text-base font-bold text-white">
                       In focus
                     </p>
                   </div>
                 </div>
 
-                <div className="mt-3 flex items-center justify-between rounded-xl border border-teal-400/10 bg-teal-400/[0.06] px-3.5 py-3">
+                <div className="mt-2 flex items-center justify-between rounded-xl border border-teal-400/10 bg-teal-400/[0.06] px-3.5 py-2">
                   <div className="flex items-center gap-2">
                     <CheckCircle2 size={15} className="text-teal-400" />
                     <span className="text-xs text-slate-300">
@@ -325,36 +328,14 @@ const captchaRef = useRef(null);
               </div>
             </div>
 
-            {/* Features */}
-            <div className="mt-9 grid max-w-[500px] grid-cols-2 gap-x-4 gap-y-3">
-              {features.map(({ icon: Icon, label }) => (
-                <div key={label} className="flex items-center gap-2.5">
-                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-teal-400/10 text-teal-300">
-                    <Check size={13} strokeWidth={2.5} />
-                  </div>
-                  <span className="text-xs text-slate-300">
-                    {label}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div className="relative z-10 flex items-center justify-between border-t border-white/10 pt-5 text-[11px] text-slate-500">
-            <span>© 2026 FLEETROVA</span>
-            <span className="flex items-center gap-1.5">
-              <ShieldCheck size={13} />
-              Partner Portal
-            </span>
           </div>
         </aside>
 
         {/* RIGHT LOGIN PANEL */}
-        <main className="relative flex min-h-screen w-full flex-col bg-[#F5F8F7] lg:w-[48%]">
+        <main className="relative flex min-h-[100dvh] w-full flex-col bg-[#F5F8F7] lg:h-[100dvh] lg:min-h-0 lg:w-[48%] lg:overflow-y-auto lg:overscroll-contain">
          
 {/* Mobile Brand */}
-<div className="flex items-center justify-between px-6 pt-7 lg:hidden">
+<div className="flex items-center justify-between px-6 pt-4 lg:hidden">
   <div className="flex items-center gap-3">
     <img
       src="/fleetrova-icon.png"
@@ -376,10 +357,10 @@ const captchaRef = useRef(null);
 </div>
 
           {/* Login Form Container */}
-          <div className="flex flex-1 items-center justify-center px-5 py-10 sm:px-10 lg:px-10 xl:px-16">
+          <div className="partner-form-area flex shrink-0 grow items-start justify-center px-5 py-4 sm:px-8 lg:px-8 lg:pt-6 xl:px-12">
             <div className="partner-fade-up w-full max-w-[440px]">
               {/* Desktop Eyebrow */}
-              <div className="mb-7 hidden items-center gap-2 lg:flex">
+              <div className="partner-eyebrow mb-3 hidden items-center gap-2 lg:flex">
                 <span className="h-1.5 w-1.5 rounded-full bg-teal-500" />
                 <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-teal-700">
                   Partner access
@@ -387,29 +368,29 @@ const captchaRef = useRef(null);
               </div>
 
               {/* Heading */}
-              <div className="mb-8">
-                <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl border border-teal-100 bg-white text-teal-700 shadow-[0_8px_25px_rgba(13,77,73,0.09)]">
-                  <Fingerprint size={24} strokeWidth={1.7} />
+              <div className="partner-heading mb-4">
+                <div className="partner-heading-icon mb-3 flex h-10 w-10 items-center justify-center rounded-2xl border border-teal-100 bg-white text-teal-700 shadow-[0_8px_25px_rgba(13,77,73,0.09)]">
+                  <Fingerprint size={21} strokeWidth={1.7} />
                 </div>
 
-                <h1 className="text-3xl font-bold tracking-[-0.04em] text-[#092B31] sm:text-[36px]">
+                <h1 className="text-[28px] font-bold tracking-[-0.04em] text-[#092B31] sm:text-[30px]">
                   Welcome back<span className="text-teal-600">.</span>
                 </h1>
 
-                <p className="mt-2 text-sm leading-6 text-slate-500">
+                <p className="mt-1.5 text-xs leading-5 text-slate-500">
                   Sign in to your partner workspace and pick up
                   right where you left off.
                 </p>
               </div>
 
               {/* Form Card */}
-              <div className="rounded-[24px] border border-white bg-white p-5 shadow-[0_16px_55px_rgba(13,55,55,0.09)] transition-shadow duration-300 hover:shadow-[0_22px_65px_rgba(13,55,55,0.13)] sm:p-7">
+              <div className="partner-form-card rounded-[20px] border border-white bg-white p-4 shadow-[0_16px_55px_rgba(13,55,55,0.09)] transition-shadow duration-300 hover:shadow-[0_22px_65px_rgba(13,55,55,0.13)] sm:p-5">
                 <form onSubmit={formik.handleSubmit} noValidate>
                   {/* Email */}
-                  <div className="mb-5">
+                  <div className="mb-3">
                     <label
                       htmlFor="partner-email"
-                      className="mb-2 block text-xs font-bold text-slate-700"
+                      className="mb-1.5 block text-xs font-bold text-slate-700"
                     >
                       Email address
                     </label>
@@ -434,7 +415,7 @@ const captchaRef = useRef(null);
                         aria-describedby={
                           emailError ? "partner-email-error" : undefined
                         }
-                        className={`h-[50px] w-full rounded-xl border bg-[#F8FAFA] pl-11 pr-4 text-sm text-slate-800 outline-none transition-all duration-200 placeholder:text-slate-400 focus:bg-white focus:ring-4 disabled:cursor-not-allowed disabled:opacity-60 ${
+                        className={`h-[44px] w-full rounded-xl border bg-[#F8FAFA] pl-11 pr-4 text-sm text-slate-800 outline-none transition-all duration-200 placeholder:text-slate-400 focus:bg-white focus:ring-4 disabled:cursor-not-allowed disabled:opacity-60 ${
                           emailError
                             ? "border-red-400 focus:border-red-500 focus:ring-red-500/10"
                             : "border-slate-200 hover:border-teal-200 focus:border-teal-500 focus:ring-teal-500/10"
@@ -453,10 +434,10 @@ const captchaRef = useRef(null);
                   </div>
 
                   {/* Password */}
-                  <div className="mb-4">
+                  <div className="mb-3">
                     <label
                       htmlFor="partner-password"
-                      className="mb-2 block text-xs font-bold text-slate-700"
+                      className="mb-1.5 block text-xs font-bold text-slate-700"
                     >
                       Password
                     </label>
@@ -483,7 +464,7 @@ const captchaRef = useRef(null);
                             ? "partner-password-error"
                             : undefined
                         }
-                        className={`h-[50px] w-full rounded-xl border bg-[#F8FAFA] pl-11 pr-12 text-sm text-slate-800 outline-none transition-all duration-200 placeholder:text-slate-400 focus:bg-white focus:ring-4 disabled:cursor-not-allowed disabled:opacity-60 ${
+                        className={`h-[44px] w-full rounded-xl border bg-[#F8FAFA] pl-11 pr-12 text-sm text-slate-800 outline-none transition-all duration-200 placeholder:text-slate-400 focus:bg-white focus:ring-4 disabled:cursor-not-allowed disabled:opacity-60 ${
                           passwordError
                             ? "border-red-400 focus:border-red-500 focus:ring-red-500/10"
                             : "border-slate-200 hover:border-teal-200 focus:border-teal-500 focus:ring-teal-500/10"
@@ -522,7 +503,7 @@ const captchaRef = useRef(null);
                   </div>
 
                   {/* Forgot Password */}
-                  <div className="mb-6 flex justify-end">
+                  <div className="mb-3 flex justify-end">
                     <Link
                       to="/forgot-password"
                       className="text-xs font-bold text-teal-700 transition-colors hover:text-teal-900 hover:underline"
@@ -532,7 +513,7 @@ const captchaRef = useRef(null);
                   </div>
 
                   {/* CAPTCHA VERIFICATION */}
-<div className="mb-4 flex flex-col items-center gap-1.5">
+<div className="mb-3 flex flex-col items-center gap-1.5">
   <TurnstileCaptcha
   ref={captchaRef}
     onVerify={setCaptchaToken}
@@ -545,7 +526,7 @@ const captchaRef = useRef(null);
                   <button
                     type="submit"
                     disabled={loading}
-                    className="partner-login-button group relative flex h-[50px] w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-gradient-to-r from-[#0E3940] to-[#0F766E] px-5 text-sm font-bold text-white shadow-[0_8px_22px_rgba(15,118,110,0.24)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_30px_rgba(15,118,110,0.34)] active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="partner-login-button group relative flex h-[44px] w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-gradient-to-r from-[#0E3940] to-[#0F766E] px-5 text-sm font-bold text-white shadow-[0_8px_22px_rgba(15,118,110,0.24)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_30px_rgba(15,118,110,0.34)] active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     <span className="partner-shine pointer-events-none absolute inset-y-0 left-0 w-1/3 -skew-x-12 bg-gradient-to-r from-transparent via-white/15 to-transparent" />
 
@@ -569,7 +550,7 @@ const captchaRef = useRef(null);
                   </button>
 
                   {/* Divider */}
-                  <div className="my-6 flex items-center gap-4">
+                  <div className="my-3 flex items-center gap-4">
                     <div className="h-px flex-1 bg-slate-200" />
                     <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
                       Or continue with
@@ -588,7 +569,7 @@ const captchaRef = useRef(null);
                         text: "OTP login feature will be available soon.",
                       });
                     }}
-                    className="group flex h-[49px] w-full items-center justify-center gap-2.5 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-[#0E3940] transition-all duration-200 hover:border-teal-300 hover:bg-teal-50 hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
+                    className="group flex h-[42px] w-full items-center justify-center gap-2.5 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-[#0E3940] transition-all duration-200 hover:border-teal-300 hover:bg-teal-50 hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     <Fingerprint
                       size={19}
@@ -600,7 +581,7 @@ const captchaRef = useRef(null);
               </div>
 
               {/* Sign Up */}
-              <p className="mt-7 text-center text-sm text-slate-500">
+              <p className="mt-4 text-center text-xs text-slate-500">
                 New to FLEETROVA?{" "}
                 <Link
                   to="/register"
@@ -612,7 +593,7 @@ const captchaRef = useRef(null);
               </p>
 
               {/* Trust Footer */}
-              <div className="mt-9 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[11px] text-slate-400">
+              <div className="partner-trust mt-4 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[11px] text-slate-400">
                 <span className="flex items-center gap-1.5">
                   <ShieldCheck size={14} className="text-teal-600" />
                   Partner access
@@ -627,7 +608,7 @@ const captchaRef = useRef(null);
           </div>
 
           {/* Bottom Footer */}
-          <div className="px-6 pb-6 text-center text-[11px] text-slate-400 lg:px-10">
+          <div className="px-6 pb-3 text-center text-[11px] text-slate-400 lg:px-10">
             © 2026 FLEETROVA. All rights reserved.
           </div>
         </main>

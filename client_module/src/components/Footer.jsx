@@ -32,6 +32,10 @@ export default function Footer() {
               Home
             </Link>
 
+          <Link to="/privacy-policy" state={{ from: "/" }} className="hover:text-white">
+         Privacy Policy
+        </Link>
+
             <Link to="/#features" className="hover:text-white">
               Features
             </Link>
@@ -62,7 +66,7 @@ export default function Footer() {
 
           <div className="mt-6 flex items-center gap-3 text-sm text-gray-400">
             <Mail size={18} className="text-violet-400" />
-            <span>Contact details coming soon</span>
+            <span>s7515722@gmail.com</span>
           </div>
 
           <div className="mt-4 flex items-center gap-3 text-sm text-gray-400">

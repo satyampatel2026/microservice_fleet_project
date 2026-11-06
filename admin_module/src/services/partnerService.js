@@ -21,10 +21,12 @@ async function request(endpoint, options = {}) {
 
 // ================= PARTNERS =================
 
-export async function getPartners(search, status, page, limit) {
+export async function getPartners(search = "", status = "", page = 1, limit = 10, sort = "", kycStatus = "") {
   const query = new URLSearchParams({
     search,
     status,
+    sort,
+    kycStatus,
     page: String(page),
     limit: String(limit),
   });

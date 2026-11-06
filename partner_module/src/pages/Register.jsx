@@ -199,7 +199,7 @@ const selectedCategory = categories.find(
 );
   
 return (
-  <div className="min-h-screen bg-[#F5F8F7] font-sans text-slate-900">
+  <div className="min-h-[100dvh] bg-[#F5F8F7] font-sans text-slate-900 lg:h-[100dvh] lg:overflow-hidden">
     <style>{`
       @keyframes registerFadeUp {
         from { opacity: 0; transform: translateY(18px); }
@@ -222,6 +222,11 @@ return (
       .register-glow {
         animation: registerGlow 9s ease-in-out infinite;
       }
+      @media (min-width: 1024px) and (max-height: 700px) {
+        .register-brand-copy { padding-top: 12px; }
+        .register-brand-copy > h1 { font-size: 30px; }
+        .register-brand-description { margin-top: 8px; line-height: 1.5; }
+      }
       @media (prefers-reduced-motion: reduce) {
         .register-enter, .register-float, .register-glow {
           animation: none !important;
@@ -229,9 +234,9 @@ return (
       }
     `}</style>
 
-    <div className="flex min-h-screen">
+    <div className="flex min-h-[100dvh] lg:h-[100dvh] lg:min-h-0 lg:overflow-hidden">
       {/* LEFT BRAND PANEL */}
-      <aside className="relative hidden w-[43%] flex-col overflow-hidden bg-[#071B22] px-9 py-10 text-white lg:flex xl:px-14">
+      <aside className="relative hidden h-[100dvh] w-[43%] shrink-0 flex-col overflow-hidden bg-[#071B22] px-8 py-5 text-white lg:flex xl:px-12">
         <div className="pointer-events-none absolute inset-0">
           <div className="register-glow absolute -left-32 top-32 h-96 w-96 rounded-full bg-teal-500/20 blur-[110px]" />
           <div className="register-glow absolute -right-32 bottom-0 h-96 w-96 rounded-full bg-emerald-500/15 blur-[110px]" />
@@ -262,32 +267,32 @@ return (
           </div>
         </div>
 
-        <div className="relative z-10 my-auto py-12">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-teal-400/20 bg-teal-400/[0.08] px-3 py-2 text-[10px] font-bold tracking-wide text-teal-300">
+        <div className="register-brand-copy relative z-10 pt-5 pb-0">
+          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-teal-400/20 bg-teal-400/[0.08] px-3 py-2 text-[10px] font-bold tracking-wide text-teal-300">
             <Sparkles size={13} />
             GROW WITH FLEETROVA
           </div>
 
-          <h1 className="max-w-lg text-[clamp(2.4rem,3.6vw,4rem)] font-bold leading-[1.12] tracking-[-0.045em]">
+          <h1 className="max-w-lg text-[clamp(2rem,3vw,3.2rem)] font-bold leading-[1.12] tracking-[-0.045em]">
             Your business.
             <span className="mt-1 block bg-gradient-to-r from-teal-300 via-emerald-400 to-[#D6B77B] bg-clip-text text-transparent">
               More possibilities.
             </span>
           </h1>
 
-          <p className="mt-6 max-w-md text-sm leading-7 text-slate-400">
+          <p className="register-brand-description mt-3 max-w-md text-sm leading-6 text-slate-400">
             Join the FLEETROVA partner network and manage
             your services, team and business operations
             from one powerful workspace.
           </p>
 
-          <div className="register-float mt-10 rounded-[24px] border border-white/[0.12] bg-white/[0.07] p-5 shadow-[0_25px_70px_rgba(0,0,0,0.25)] backdrop-blur-xl">
-            <div className="mb-5 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-400/15 text-teal-300">
-                <BriefcaseBusiness size={20} />
+          <div className="register-float mt-5 rounded-[20px] border border-white/[0.12] bg-white/[0.07] p-3.5 shadow-[0_25px_70px_rgba(0,0,0,0.25)] backdrop-blur-xl">
+            <div className="mb-3 flex items-center gap-2.5">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-400/15 text-teal-300">
+                <BriefcaseBusiness size={17} />
               </div>
               <div>
-                <h3 className="text-sm font-bold">
+                <h3 className="text-xs font-bold">
                   Your partner workspace
                 </h3>
                 <p className="text-[11px] text-slate-400">
@@ -296,7 +301,7 @@ return (
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2">
               {[
                 { icon: Truck, text: "Manage services" },
                 { icon: UsersRound, text: "Manage employees" },
@@ -305,9 +310,9 @@ return (
               ].map(({ icon: Icon, text }) => (
                 <div
                   key={text}
-                  className="flex items-center gap-2.5 rounded-xl border border-white/[0.08] bg-white/[0.05] px-3 py-3.5"
+                  className="flex items-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.05] px-2.5 py-2.5"
                 >
-                  <Icon size={17} className="shrink-0 text-teal-300" />
+                  <Icon size={15} className="shrink-0 text-teal-300" />
                   <span className="text-[11px] font-medium text-slate-200">
                     {text}
                   </span>
@@ -315,22 +320,18 @@ return (
               ))}
             </div>
 
-            <div className="mt-4 flex items-center gap-2 rounded-xl bg-emerald-400/[0.08] px-3 py-3 text-xs text-emerald-300">
-              <ShieldCheck size={16} />
+            <div className="mt-2.5 flex items-center gap-2 rounded-lg bg-emerald-400/[0.08] px-2.5 py-2 text-[11px] text-emerald-300">
+              <ShieldCheck size={14} />
               A smarter way to manage your operations
             </div>
           </div>
         </div>
-
-        <div className="relative z-10 border-t border-white/10 pt-5 text-[11px] text-slate-500">
-          © 2026 FLEETROVA · Partner Workspace
-        </div>
       </aside>
 
       {/* RIGHT REGISTRATION PANEL */}
-      <main className="w-full lg:w-[57%]">
+      <main className="w-full min-w-0 lg:h-[100dvh] lg:w-[57%] lg:overflow-y-auto lg:overscroll-contain">
         {/* Mobile Logo */}
-        <div className="flex items-center gap-3 px-5 pt-6 lg:hidden">
+        <div className="flex items-center gap-3 px-5 pt-3 lg:hidden">
           <img
             src="/fleetrova-icon.png"
             alt="FLEETROVA"
@@ -346,7 +347,7 @@ return (
           </div>
         </div>
 
-        <div className="flex min-h-screen justify-center px-4 py-9 sm:px-8 lg:px-10 xl:px-14">
+        <div className="flex justify-center px-4 py-4 sm:px-8 lg:px-10 lg:py-5 xl:px-14">
           <div className="register-enter w-full max-w-[560px]">
             {/* Heading */}
             <div className="mb-6">

@@ -119,65 +119,15 @@ const DocumentRow = ({
 
 const KycDetails = ({
   kyc,
-  isVerified,
   onEdit,
   setError,
 }) => {
-  const handleViewDocument = async (document, documentType) => {
-    const newTab = window.open("", "_blank");
-
-    if (!newTab) {
-      setError("Please allow pop-ups to view the document.");
-      return;
-    }
-
-    try {
-      const url = getDocumentUrl(document, documentType);
-
-      if (!url) {
-        newTab.close();
-        setError("Document is not available.");
-        return;
-      }
-
-      const response = await fetch(url, {
-        method: "GET",
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        throw new Error(
-          `Unable to open document (${response.status})`
-        );
-      }
-
-      const blob = await response.blob();
-
-      if (
-        !blob.type.startsWith("image/") &&
-        blob.type !== "application/pdf"
-      ) {
-        throw new Error(
-          "Server did not return a valid document."
-        );
-      }
-
-      const blobUrl = window.URL.createObjectURL(blob);
-
-      newTab.location.href = blobUrl;
-
-      setTimeout(() => {
-        window.URL.revokeObjectURL(blobUrl);
-      }, 60000);
-    } catch (err) {
-      console.error("Document open error:", err);
-
-      newTab.close();
-
-      setError(
-        err?.message || "Unable to open document."
-      );
-    }
+  const handleViewDocument = (document, documentType) => {
+    const url = getDocumentUrl(document, documentType);
+    if (!url) { setError("Document is not available."); return; }
+    // Direct API tab: backend cookie check ke baad Cloudinary link kholega.
+    // Cross-origin redirect ko fetch/blob se read nahi karna.
+    window.open(url, "_blank", "noopener,noreferrer");
   };
 
   return (
@@ -201,22 +151,20 @@ const KycDetails = ({
           </div>
         </div>
 
-        {!isVerified ? (
-          <button
-            type="button"
-            onClick={onEdit}
-            className="inline-flex h-9 items-center gap-2 rounded-xl bg-gradient-to-r from-[#0E3940] to-[#0F766E] px-4 text-[11px] font-bold text-white shadow-sm transition-opacity hover:opacity-90"
-          >
-            <Pencil size={14} />
-            Edit KYC
-          </button>
-        ) : (
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1.5 text-[10px] font-bold text-emerald-700">
-            <ShieldCheck size={13} />
-            Verified
+        <div className="flex flex-wrap items-center gap-2">
+          <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1.5 text-[10px] font-bold capitalize ${statusClass(kyc.kyc_status)}`}>
+            {kyc.kyc_status === "verified" ? <ShieldCheck size={12} /> : <AlertCircle size={12} />}
+            {kyc.kyc_status || "pending"}
           </span>
-        )}
+          <button type="button" onClick={onEdit} className="inline-flex h-9 items-center gap-2 rounded-xl bg-gradient-to-r from-[#0E3940] to-[#0F766E] px-4 text-[11px] font-bold text-white shadow-sm hover:opacity-90">
+            <Pencil size={14} />Edit KYC
+          </button>
+        </div>
       </div>
+
+      {kyc.kyc_status === "rejected" && kyc.rejection_reason && (
+        <div role="note" className="border-b border-red-100 bg-red-50 px-4 py-2 text-xs text-red-700 sm:px-5"><span className="font-semibold">Rejection reason: </span>{kyc.rejection_reason}</div>
+      )}
 
       {/* DETAILS TABLE */}
       <div className="overflow-x-auto">

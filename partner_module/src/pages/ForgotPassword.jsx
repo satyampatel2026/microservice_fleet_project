@@ -13,7 +13,6 @@ import {
   LockKeyhole,
   Mail,
   ShieldCheck,
-  Sparkles,
 } from "lucide-react";
 
 import {
@@ -29,7 +28,7 @@ const steps = [
 ];
 
 const inputClass =
-  "h-[50px] w-full rounded-xl border border-slate-200 " +
+  "h-[44px] w-full rounded-xl border border-slate-200 " +
   "bg-[#F8FAFA] px-4 text-sm text-slate-800 outline-none " +
   "transition-all duration-200 placeholder:text-slate-400 " +
   "hover:border-teal-200 focus:border-teal-500 " +
@@ -37,7 +36,7 @@ const inputClass =
   "disabled:cursor-not-allowed disabled:opacity-60";
 
 const primaryButtonClass =
-  "group flex h-[50px] w-full items-center justify-center gap-2 " +
+  "group flex h-[44px] w-full items-center justify-center gap-2 " +
   "rounded-xl bg-gradient-to-r from-[#0E3940] to-[#0F766E] " +
   "px-5 text-sm font-bold text-white " +
   "shadow-[0_8px_22px_rgba(15,118,110,0.24)] " +
@@ -193,8 +192,12 @@ const captchaRef = useRef(null);
   const CurrentIcon = current.icon;
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#071B22] px-4 py-10 font-sans selection:bg-teal-100 selection:text-teal-900 sm:px-6">
+    <div className="relative flex min-h-[100dvh] items-center justify-center bg-[#071B22] px-4 py-4 font-sans selection:bg-teal-100 selection:text-teal-900 sm:px-6">
       <style>{`
+        @media (max-height: 650px) {
+          .recovery-float { display: none; }
+        }
+
         @keyframes recoveryFadeUp {
           from {
             opacity: 0;
@@ -263,33 +266,17 @@ const captchaRef = useRef(null);
         />
       </div>
 
-      <div className="relative z-10 w-full max-w-[480px]">
-        {/* Brand Logo */}
-        <div className="recovery-enter mb-7 flex flex-col items-center text-center">
-          <img
-            src="/fleetrova-logo.png"
-            alt="FLEETROVA"
-            className="h-14 w-auto max-w-[230px] object-contain drop-shadow-[0_8px_20px_rgba(20,184,166,0.18)]"
-          />
-
-          <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-teal-400/20 bg-teal-400/[0.08] px-3.5 py-1.5">
-            <Sparkles size={12} className="text-teal-300" />
-            <span className="text-[10px] font-bold uppercase tracking-[0.17em] text-teal-300">
-              Partner Workspace
-            </span>
-          </div>
-        </div>
-
+      <div className="relative z-10 w-full max-w-[420px]">
         {/* Premium Card */}
-        <div className="recovery-enter overflow-hidden rounded-[28px] border border-white/20 bg-white shadow-[0_30px_90px_rgba(0,0,0,0.35)] transition-shadow duration-300 hover:shadow-[0_36px_100px_rgba(0,0,0,0.42)]">
+        <div className="recovery-enter overflow-hidden rounded-[20px] border border-white/20 bg-white shadow-[0_30px_90px_rgba(0,0,0,0.35)] transition-shadow duration-300 hover:shadow-[0_36px_100px_rgba(0,0,0,0.42)]">
           {/* Accent Bar */}
           <div className="h-1 w-full bg-gradient-to-r from-[#0E3940] via-[#14B8A6] to-[#D6B77B]" />
 
-          <div className="p-6 sm:p-8">
+          <div className="p-4 sm:p-5">
             {/* Header */}
-            <div className="mb-7 text-center">
-              <div className="recovery-float mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-teal-100 bg-teal-50 text-teal-700 shadow-[0_8px_25px_rgba(15,118,110,0.12)]">
-                <CurrentIcon size={26} strokeWidth={1.7} />
+            <div className="mb-4 text-center">
+              <div className="recovery-float mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-2xl border border-teal-100 bg-teal-50 text-teal-700 shadow-[0_8px_25px_rgba(15,118,110,0.12)]">
+                <CurrentIcon size={21} strokeWidth={1.7} />
               </div>
 
               <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-teal-700">
@@ -307,14 +294,14 @@ const captchaRef = useRef(null);
 
             {/* Step Indicator */}
             <div
-              className="mb-7 flex items-center justify-center"
+              className="mb-4 flex items-center justify-center"
               aria-label={`Step ${step} of 3`}
             >
               {steps.map((item, index) => (
                 <div key={item.number} className="flex items-center">
-                  <div className="flex flex-col items-center gap-2">
+                  <div className="flex flex-col items-center gap-1.5">
                     <div
-                      className={`flex h-9 w-9 items-center justify-center rounded-full border text-xs font-bold transition-all duration-300 ${
+                      className={`flex h-8 w-8 items-center justify-center rounded-full border text-xs font-bold transition-all duration-300 ${
                         step > item.number
                           ? "border-teal-600 bg-teal-600 text-white"
                           : step === item.number
@@ -342,7 +329,7 @@ const captchaRef = useRef(null);
 
                   {index < steps.length - 1 && (
                     <div
-                      className={`mx-2 mb-5 h-[2px] w-10 rounded-full transition-colors duration-300 sm:mx-3 sm:w-14 ${
+                      className={`mx-2 mb-4 h-[2px] w-10 rounded-full transition-colors duration-300 sm:mx-3 sm:w-14 ${
                         step > item.number
                           ? "bg-teal-500"
                           : "bg-slate-200"
@@ -357,7 +344,7 @@ const captchaRef = useRef(null);
             {message && (
               <div
                 role="status"
-                className="recovery-enter mb-5 flex items-start gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs font-medium text-emerald-700"
+                className="recovery-enter mb-3 flex items-start gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs font-medium text-emerald-700"
               >
                 <CheckCircle2 size={17} className="shrink-0" />
                 <span>{message}</span>
@@ -368,7 +355,7 @@ const captchaRef = useRef(null);
             {error && (
               <div
                 role="alert"
-                className="recovery-enter mb-5 flex items-start gap-2.5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs font-medium text-red-700"
+                className="recovery-enter mb-3 flex items-start gap-2.5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs font-medium text-red-700"
               >
                 <ShieldCheck size={17} className="shrink-0" />
                 <span>{error}</span>
@@ -379,13 +366,13 @@ const captchaRef = useRef(null);
             {step === 1 && (
               <form
                 onSubmit={handleSendOtp}
-                className="recovery-enter space-y-5"
+                className="recovery-enter space-y-3"
               >
                 
 <div>
   <label
     htmlFor="recovery-email"
-    className="mb-2 block text-xs font-semibold text-slate-700"
+    className="mb-1.5 block text-xs font-semibold text-slate-700"
   >
     Registered email address
   </label>
@@ -406,12 +393,12 @@ const captchaRef = useRef(null);
       value={email}
       onChange={(e) => setEmail(e.target.value)}
       disabled={loading}
-      className="h-12 w-full rounded-xl border border-slate-200 bg-[#F8FAFA] py-3 pl-12 pr-4 text-sm text-slate-800 outline-none transition-all duration-200 placeholder:text-slate-400 hover:border-teal-200 focus:border-teal-500 focus:bg-white focus:ring-4 focus:ring-teal-500/10 disabled:cursor-not-allowed disabled:opacity-60"
+      className="h-11 w-full rounded-xl border border-slate-200 bg-[#F8FAFA] py-3 pl-12 pr-4 text-sm text-slate-800 outline-none transition-all duration-200 placeholder:text-slate-400 hover:border-teal-200 focus:border-teal-500 focus:bg-white focus:ring-4 focus:ring-teal-500/10 disabled:cursor-not-allowed disabled:opacity-60"
     />
   </div>
 </div>
           {/* CAPTCHA VERIFICATION */}
-<div className="flex flex-col items-center gap-1.5 rounded-lg border border-teal-100 bg-[#F8FBFA] px-3 py-3">
+<div className="flex flex-col items-center gap-1.5 rounded-lg border border-teal-100 bg-[#F8FBFA] px-2 py-2">
   <TurnstileCaptcha
     ref={captchaRef}
     onVerify={setCaptchaToken}
@@ -447,7 +434,7 @@ const captchaRef = useRef(null);
             {step === 2 && (
               <form
                 onSubmit={handleVerifyOtp}
-                className="recovery-enter space-y-5"
+                className="recovery-enter space-y-3"
               >
                 <div className="rounded-xl border border-teal-100 bg-teal-50/70 px-4 py-3">
                   <p className="text-xs leading-5 text-slate-600">
@@ -462,7 +449,7 @@ const captchaRef = useRef(null);
                 <div>
                   <label
                     htmlFor="recovery-otp"
-                    className="mb-2 block text-xs font-bold text-slate-700"
+                    className="mb-1.5 block text-xs font-bold text-slate-700"
                   >
                     6-digit verification code
                   </label>
@@ -511,7 +498,7 @@ const captchaRef = useRef(null);
                     setStep(1);
                     clearMessages();
                   }}
-                  className="flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-600 transition-all hover:border-teal-200 hover:bg-teal-50 hover:text-teal-800 disabled:opacity-60"
+                  className="flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-600 transition-all hover:border-teal-200 hover:bg-teal-50 hover:text-teal-800 disabled:opacity-60"
                 >
                   <ArrowLeft size={15} />
                   Change email address
@@ -523,12 +510,12 @@ const captchaRef = useRef(null);
             {step === 3 && (
               <form
                 onSubmit={handleResetPassword}
-                className="recovery-enter space-y-5"
+                className="recovery-enter space-y-3"
               >
                 <div>
                   <label
                     htmlFor="new-password"
-                    className="mb-2 block text-xs font-bold text-slate-700"
+                    className="mb-1.5 block text-xs font-bold text-slate-700"
                   >
                     New password
                   </label>
@@ -579,7 +566,7 @@ const captchaRef = useRef(null);
                 <div>
                   <label
                     htmlFor="confirm-password"
-                    className="mb-2 block text-xs font-bold text-slate-700"
+                    className="mb-1.5 block text-xs font-bold text-slate-700"
                   >
                     Confirm new password
                   </label>
@@ -651,7 +638,7 @@ const captchaRef = useRef(null);
             )}
 
             {/* Back to Login */}
-            <div className="mt-7 border-t border-slate-100 pt-5">
+            <div className="mt-4 border-t border-slate-100 pt-3">
               <Link
                 to="/login"
                 className="flex items-center justify-center gap-2 text-xs font-bold text-teal-700 transition-colors hover:text-teal-900"
@@ -664,7 +651,7 @@ const captchaRef = useRef(null);
         </div>
 
         {/* Footer */}
-        <div className="mt-6 flex flex-col items-center gap-2 text-center">
+        <div className="mt-6 flex flex-col items-center gap-1.5 text-center">
           <div className="flex items-center gap-2 text-xs text-teal-100/70">
             <ShieldCheck size={15} className="text-teal-300" />
             Secure partner account recovery

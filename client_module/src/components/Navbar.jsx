@@ -6,6 +6,7 @@ import { Menu, X, ArrowUpRight } from "lucide-react";
 const navLinks = [
   { name: "Home", href: "/" },
   { name: "Features", href: "/#features" },
+  { name: "Services", href: "/#services" },
   { name: "How It Works", href: "/#how-it-works" },
   { name: "About Us", href: "/#about" },
   { name: "Contact", href: "/#contact" },
@@ -39,7 +40,7 @@ export default function Navbar() {
 };
 
   return (
-    <header className="fixed top-0 z-50 w-full border-b border-white/10 bg-[#090b12]/85 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-[#090b12]/85 backdrop-blur-xl">
       <nav className="mx-auto flex max-w-7xl items-center justify-between gap-5 px-6 py-4">
         {/* Logo */}
         {/* FLEETROVA Logo */}

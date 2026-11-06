@@ -159,13 +159,15 @@ const createPartnerProfile = async (req, res) => {
        VALUES (UPPER(?), ?, ?, 'inactive', ?)`,
       [
         partnername.trim(),
-        email.trim(),
+        email.trim().toLowerCase(),
         mobile,
         registrationToken,
       ]
     );
 
     const partnerId = result.insertId;
+    const partnerCode = `FR-P-${String(partnerId).padStart(4, "0")}`;
+    await dbConnection.query("UPDATE partners SET partner_code = ? WHERE partner_id = ?", [partnerCode, partnerId]);
 
     // 6. Selected services insert karo
     for (const serviceId of service_ids) {
@@ -185,6 +187,7 @@ const createPartnerProfile = async (req, res) => {
       message: "Partner profile created",
       data: {
         partner_id: partnerId,
+        partner_code: partnerCode,
       },
     });
 
@@ -224,7 +227,7 @@ const createPartnerProfile = async (req, res) => {
 const activatePartnerProfile = async (req, res) => {
   try {
     const { partnerId } = req.params;
-    const { email,registrationToken  } = req.body;
+    const { email, registrationToken } = req.body || {};
 
     if (
       !/^[1-9]\d*$/.test(partnerId) ||
@@ -247,7 +250,7 @@ const activatePartnerProfile = async (req, res) => {
          AND email = ?
          AND registration_token = ?
          AND status = 'inactive'`,
-      [partnerId, email.trim(),registrationToken]
+      [partnerId, email.trim().toLowerCase(), registrationToken]
     );
 
     if (result.affectedRows !== 1) {
@@ -271,43 +274,5 @@ const activatePartnerProfile = async (req, res) => {
   }
 };
 
- const getPartnerByRegistrationToken = async (req, res) => {
-  try {
-    const { registrationToken } = req.params;
 
-    if (!/^[a-f0-9]{64}$/.test(registrationToken || "")) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid registration token",
-      });
-    }
-
-    const [partners] = await connection.query(
-      `SELECT partner_id, email, status
-       FROM partners
-       WHERE registration_token = ?
-       LIMIT 1`,
-      [registrationToken]
-    );
-
-    if (partners.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "Registration profile not found",
-      });
-    }
-
-    return res.status(200).json({
-      success: true,
-      data: partners[0],
-    });
-  } catch (error) {
-    console.error("Registration Profile Lookup Error:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Failed to find registration profile",
-    });
-  }
-};
-module.exports = { getPartnerProfile,createPartnerProfile,activatePartnerProfile,getPartnerByRegistrationToken };
+module.exports = { getPartnerProfile,createPartnerProfile,activatePartnerProfile };

@@ -1,11 +1,6 @@
-export const MAX_FILE_SIZE = 5 * 1024 * 1024;
+export const MAX_FILE_SIZE = 200 * 1024;
 
-export const ALLOWED_FILE_TYPES = [
-    "application/pdf",
-    "image/jpeg",
-    "image/jpg",
-    "image/png"
-];
+export const ALLOWED_FILE_TYPES = ["application/pdf", "image/jpeg"];
 
 export const emptyForm = {
     owner_name: "",

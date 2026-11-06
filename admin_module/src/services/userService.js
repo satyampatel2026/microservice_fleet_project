@@ -28,6 +28,8 @@ export async function getUsers(filters = {}) {
     department: filters.department || "all",
     page: String(filters.page || 1),
     limit: String(filters.limit || 10),
+    sortBy: filters.sortBy || "user_id",
+    sortOrder: filters.sortOrder || "desc",
   });
 
   return request(`${BASE_URL}/users?${query.toString()}`);

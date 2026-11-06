@@ -7,7 +7,7 @@ const internalServiceMiddleware = require(
 );
 
 const {
-  getPartnerProfile,createPartnerProfile,activatePartnerProfile,getPartnerByRegistrationToken
+  getPartnerProfile,createPartnerProfile,activatePartnerProfile
 } = require("../controllers/internalPartnerController");
 
 internalPartnerRouter.get(
@@ -28,11 +28,6 @@ internalPartnerRouter.patch(
   activatePartnerProfile
 );
 
-// Internal registration recovery lookup
-internalPartnerRouter.get(
-  "/internal/partners/registration/:registrationToken",
-  internalServiceMiddleware,
-  getPartnerByRegistrationToken
-);
+
 
 module.exports = internalPartnerRouter;

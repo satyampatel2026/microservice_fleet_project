@@ -1,7 +1,7 @@
 
 import { useFormik } from "formik";
 import Swal from "sweetalert2";
-import { Loader2, Plus, ShieldCheck } from "lucide-react";
+import { Loader2, Plus, ShieldCheck,UserPlus } from "lucide-react";
 
 import { roleValidationSchema } from "../../../validations/roleValidation";
 
@@ -138,7 +138,7 @@ export default function RoleForm({ roles, onAdd }) {
             </>
           ) : (
             <>
-              <Plus size={17} />
+              <UserPlus size={17} />
               Add role
             </>
           )}

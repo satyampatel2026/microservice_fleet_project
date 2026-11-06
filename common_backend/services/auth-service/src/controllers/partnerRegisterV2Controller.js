@@ -1,6 +1,3 @@
-const { recoverPartnerRegistration } = require("./partnerRegistrationRecovery");
-// const { activatePartnerWithEvent,} = require("../services/partnerActivationService");
-await activatePartnerWithEvent(partnerId, normalizedEmail);
 const authDb = require("../model/authDb");
 const bcrypt = require("bcrypt");
 const crypto = require("crypto");
@@ -9,18 +6,24 @@ const axios = require("axios");
 const PARTNER_SERVICE_URL =
   process.env.PARTNER_SERVICE_URL || "http://localhost:5003";
 
-
 const registerPartnerV2 = async (req, res) => {
-  const { partnername, email, mobile, password,service_ids } = req.body || {};
+  const {
+    partnername,
+    email,
+    mobile,
+    password,
+    service_ids,
+  } = req.body || {};
 
+  // 1. Partner details check karo
   if (
     typeof partnername !== "string" ||
-    typeof email !== "string" ||
-    typeof mobile !== "string" ||
-    typeof password !== "string" ||
     !partnername.trim() ||
+    typeof email !== "string" ||
     !email.trim() ||
+    typeof mobile !== "string" ||
     !/^[0-9]{10}$/.test(mobile) ||
+    typeof password !== "string" ||
     password.length < 6
   ) {
     return res.status(400).json({
@@ -28,43 +31,44 @@ const registerPartnerV2 = async (req, res) => {
       message: "Invalid partner registration details",
     });
   }
-  // Validate selected services
-if (
-  !Array.isArray(service_ids) ||
-  service_ids.length === 0 ||
-  service_ids.length > 100
-) {
-  return res.status(400).json({
-    success: false,
-    message: "Select between 1 and 100 services",
-  });
-}
 
-const checkedIds = [];
-
-for (const id of service_ids) {
-  if (!Number.isSafeInteger(id) || id <= 0) {
+  // 2. Selected services check karo
+  if (
+    !Array.isArray(service_ids) ||
+    service_ids.length === 0 ||
+    service_ids.length > 100
+  ) {
     return res.status(400).json({
       success: false,
-      message: "Invalid service ID",
+      message: "Select between 1 and 100 services",
     });
   }
 
-  if (checkedIds.includes(id)) {
-    return res.status(400).json({
-      success: false,
-      message: "Duplicate service ID",
-    });
+  const checkedIds = [];
+
+  for (const id of service_ids) {
+    if (!Number.isSafeInteger(id) || id <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid service ID",
+      });
+    }
+
+    if (checkedIds.includes(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Duplicate service ID",
+      });
+    }
+
+    checkedIds.push(id);
   }
 
-  checkedIds.push(id);
-}
   const normalizedEmail = email.trim().toLowerCase();
-  let partnerId = null;
-let registrationToken = null;
 
   try {
-    const [existingAccounts] = await authDb.query(
+    // 3. Email already registered hai?
+    const [accounts] = await authDb.query(
       `SELECT auth_id
        FROM partner_accounts
        WHERE email = ?
@@ -72,120 +76,101 @@ let registrationToken = null;
       [normalizedEmail]
     );
 
-    if (existingAccounts.length > 0) {
+    if (accounts.length > 0) {
       return res.status(409).json({
         success: false,
         message: "Email already registered",
       });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    if (!process.env.INTERNAL_SERVICE_KEY) {
+      throw new Error("INTERNAL_SERVICE_KEY is missing");
+    }
 
-    registrationToken = crypto.randomBytes(32).toString("hex");
+    // 4. Password hash aur internal registration token banao
+    const passwordHash = await bcrypt.hash(password, 10);
 
-if (!process.env.INTERNAL_SERVICE_KEY) {
-  throw new Error("INTERNAL_SERVICE_KEY is missing");
-}
+    const registrationToken = crypto
+      .randomBytes(32)
+      .toString("hex");
 
- try {
-  const profileResponse = await axios.post(
-    `${PARTNER_SERVICE_URL}/internal/partners`,
-    {
-      partnername: partnername.trim(),
-      email: normalizedEmail,
-      mobile,
-      registrationToken,
-      service_ids
-    },
-    {
+    // Client Service ki tarah internal REST calls ki settings
+    const options = {
       headers: {
         "x-internal-service-key": process.env.INTERNAL_SERVICE_KEY,
       },
       timeout: 5000,
-    }
-  );
+    };
 
-  partnerId = profileResponse.data?.data?.partner_id;
-} catch (profileError) {
-  // Only attempt recovery when the POST result is unknown.
-  if (profileError.response) {
-    throw profileError;
-  }
-
-  const lookupResponse = await axios.get(
-    `${PARTNER_SERVICE_URL}/internal/partners/registration/${registrationToken}`,
-    {
-      headers: {
-        "x-internal-service-key": process.env.INTERNAL_SERVICE_KEY,
+    // 5. Partner Service mein profile banao
+    const profileResponse = await axios.post(
+      `${PARTNER_SERVICE_URL}/internal/partners`,
+      {
+        partnername: partnername.trim(),
+        email: normalizedEmail,
+        mobile,
+        service_ids,
+        registrationToken,
       },
-      timeout: 5000,
+      options
+    );
+
+    const partnerId = profileResponse.data?.data?.partner_id;
+
+    if (
+      profileResponse.data?.success !== true ||
+      !Number.isSafeInteger(partnerId) ||
+      partnerId <= 0
+    ) {
+      throw new Error("Invalid partner profile response");
     }
-  );
 
-  if (
-    lookupResponse.data?.success !== true ||
-    lookupResponse.data?.data?.email !== normalizedEmail ||
-    lookupResponse.data?.data?.status !== "inactive"
-  ) {
-    throw new Error("Unable to verify created partner profile");
-  }
+    // 6. Auth database mein login account banao
+    await authDb.query(
+      `INSERT INTO partner_accounts
+       (partner_id, email, password_hash, status)
+       VALUES (?, ?, ?, 'inactive')`,
+      [partnerId, normalizedEmail, passwordHash]
+    );
 
-  partnerId = lookupResponse.data.data.partner_id;
-}
+    // 7. Partner profile activate karo
+    const activationResponse = await axios.patch(
+      `${PARTNER_SERVICE_URL}/internal/partners/${partnerId}/activate`,
+      {
+        email: normalizedEmail,
+        registrationToken,
+      },
+      options
+    );
 
-if (!Number.isSafeInteger(partnerId) || partnerId <= 0) {
-  throw new Error("Invalid partner ID returned by Partner Service");
-}
+    if (activationResponse.data?.success !== true) {
+      throw new Error("Partner profile activation failed");
+    }
 
-  const [authResult] = await authDb.query(
-  `INSERT INTO partner_accounts
-     (partner_id, email, password_hash, status)
-    VALUES (?, ?, ?, 'inactive')`,
-  [partnerId, normalizedEmail, hashedPassword]
-);
+    // 8. Auth account activate karo
+    const [result] = await authDb.query(
+      `UPDATE partner_accounts
+       SET status = 'active'
+       WHERE partner_id = ? AND email = ?`,
+      [partnerId, normalizedEmail]
+    );
 
-if (!authResult.insertId) {
-  throw new Error("Failed to create partner auth account");
-}
+    if (result.affectedRows !== 1) {
+      throw new Error("Partner auth account not found");
+    }
 
-  const activationResponse = await axios.patch(
-  `${PARTNER_SERVICE_URL}/internal/partners/${partnerId}/activate`,
-  {
-    email: normalizedEmail,
-    registrationToken,
-  },
-  {
-    headers: {
-      "x-internal-service-key": process.env.INTERNAL_SERVICE_KEY,
-    },
-    timeout: 5000,
-  }
-);
-
-if (activationResponse.data?.success !== true) {
-  throw new Error("Partner profile activation failed");
-}
-await activatePartnerWithEvent(partnerId, normalizedEmail);
-
-return res.status(201).json({
-  success: true,
-  message: "Partner created successfully",
-});
-     } catch (error) {
-    console.error("Partner Registration V2 Error:", error.message);
-
-    const recovery = await recoverPartnerRegistration({
-      partnerId,
-      normalizedEmail,
-      registrationToken,
+    // Existing frontend response same rakha hai
+    return res.status(201).json({
+      success: true,
+      message: "Partner created successfully",
     });
-
-    if (recovery.recovered) {
-      return res.status(201).json({
-        success: true,
-        message: "Partner created successfully",
-      });
-    }
+  } catch (error) {
+    console.error("Partner registration failed:", {
+  message: error.message,
+  status: error.response?.status,
+  details: error.response?.data,
+  databaseCode: error.code,
+});
 
     return res.status(500).json({
       success: false,
@@ -193,4 +178,5 @@ return res.status(201).json({
     });
   }
 };
+
 module.exports = { registerPartnerV2 };

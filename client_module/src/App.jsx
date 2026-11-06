@@ -13,8 +13,14 @@ import ClientLayout from "./components/client/ClientLayout";
 import ClientDashboard from "./pages/client/ClientDashboard";
 import About from "./components/About";
 import Contact from "./components/Contact";
-
+import ClientProtectedRoute from "./components/client/ClientProtectedRoute";
+import PrivacyPolicy from "./components/client/PrivacyPolicy";
 import Login from "./pages/Login";
+import ClientProfile from "./pages/client/ClientProfile";
+import MobileTracking from "./pages/MobileTracking";
+import ClientVehicles from "./pages/client/ClientVehicles";
+import ClientDrivers from "./pages/client/ClientDrivers";
+import VehicleTracking from "./pages/client/VehicleTracking";
 
 function Home() {
   return (
@@ -39,12 +45,21 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/track/:sessionId" element={<MobileTracking />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/client" element={<ClientLayout />}>
-  <Route path="dashboard" element={<ClientDashboard />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route element={<ClientProtectedRoute />}>
+  <Route path="/client" element={<ClientLayout />}>
+    <Route path="dashboard" element={<ClientDashboard />} />
+      <Route path="profile" element={<ClientProfile />} />
+      <Route path="vehicles" element={<ClientVehicles />} />
+      <Route path="tracking" element={<VehicleTracking />} />
+      <Route path="drivers" element={<ClientDrivers/>}/>
+  </Route>
 </Route>
+
       </Routes>
     </BrowserRouter>
   );

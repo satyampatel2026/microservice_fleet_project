@@ -1,12 +1,12 @@
 const connection = require("../model/db");
 
-
 // ================= GET DEPARTMENTS =================
 
 const getDept = async (req, res) => {
   try {
     const query = `
-      SELECT * FROM departments
+      SELECT department_id, department_code, department_name
+      FROM departments
     `;
 
     const [result] = await connection.query(query);
@@ -23,35 +23,45 @@ const getDept = async (req, res) => {
   }
 };
 
-
 // ================= ADD DEPARTMENT =================
 
 const postDept = async (req, res) => {
   const { department_name } = req.body;
+  let dbConnection;
 
   try {
-    const query = `
-      INSERT INTO departments
-      SET department_name = UPPER(?)
-    `;
+    dbConnection = await connection.getConnection();
+    await dbConnection.beginTransaction();
 
-    const [result] = await connection.query(
-      query,
+    // Pehle actual auto-increment department ID lo.
+    const [result] = await dbConnection.query(
+      "INSERT INTO departments SET department_name = UPPER(?)",
       [department_name]
     );
 
-    return res.status(201).json(result);
+    const departmentCode = "dept" + String(result.insertId).padStart(2, "0");
 
-  } catch (error) {
-    console.error("Add Department Error:", error);
+    // Code bhi isi transaction mein save hoga.
+    await dbConnection.query(
+      "UPDATE departments SET department_code = ? WHERE department_id = ?",
+      [departmentCode, result.insertId]
+    );
 
-    return res.status(500).json({
-      success: false,
-      message: error.message,
+    await dbConnection.commit();
+
+    // Existing insertId/affectedRows fields same hain; code extra milega.
+    return res.status(201).json({
+      ...result,
+      department_code: departmentCode,
     });
+  } catch (error) {
+    if (dbConnection) await dbConnection.rollback().catch(() => {});
+    console.error("Add Department Error:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  } finally {
+    if (dbConnection) dbConnection.release();
   }
 };
-
 
 // ================= UPDATE DEPARTMENT =================
 

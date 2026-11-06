@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useFormik } from "formik";
 import Swal from "sweetalert2";
@@ -10,7 +9,7 @@ import {
   Loader2,
   Mail,
   Phone,
-  Plus,
+  UserPlus,
   UserRound,
 } from "lucide-react";
 
@@ -20,6 +19,7 @@ export default function UserForm({
   users,
   departments,
   onAddUser,
+  onSuccess,
 }) {
   const [showPassword, setShowPassword] = useState(false);
 
@@ -68,7 +68,11 @@ export default function UserForm({
         helpers.resetForm();
         setShowPassword(false);
 
-        await Swal.fire({
+        if (onSuccess) onSuccess();
+
+        Swal.fire({
+          toast: true,
+          position: "top-end",
           icon: "success",
           title: "User added",
           text:
@@ -91,28 +95,11 @@ export default function UserForm({
   });
 
   return (
-    <section className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_6px_24px_rgba(15,23,42,0.10)] transition-all duration-300 hover:border-violet-200 hover:shadow-[0_12px_32px_rgba(15,23,42,0.15)] sm:p-5 dark:border-white/[0.08] dark:bg-[#191e2d] dark:shadow-[0_8px_28px_rgba(0,0,0,0.30)] dark:hover:border-violet-400/20 dark:hover:shadow-[0_14px_36px_rgba(0,0,0,0.42)]">
-      {/* Form Heading */}
-      <div className="mb-5 flex items-start gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-violet-200/70 bg-violet-50 text-violet-600 dark:border-violet-400/15 dark:bg-violet-400/10 dark:text-violet-300">
-          <Plus size={19} strokeWidth={2} />
-        </div>
-
-        <div>
-          <h3 className="text-base font-bold tracking-tight text-slate-900 dark:text-white">
-            Add new user
-          </h3>
-
-          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-            Enter account and department information.
-          </p>
-        </div>
-      </div>
-
+    <section>
       {/* User Form */}
       <form
         onSubmit={formik.handleSubmit}
-        className="grid gap-4 md:grid-cols-2 xl:grid-cols-3"
+        className="grid gap-3 sm:grid-cols-2"
         noValidate
       >
         <Field
@@ -157,6 +144,7 @@ export default function UserForm({
             />
 
             <input
+              disabled={formik.isSubmitting}
               id="add-user-password"
               name="password"
               type={showPassword ? "text" : "password"}
@@ -205,6 +193,7 @@ export default function UserForm({
           </label>
 
           <select
+            disabled={formik.isSubmitting}
             id="add-user-department"
             name="department_id"
             value={formik.values.department_id}
@@ -235,7 +224,7 @@ export default function UserForm({
         </div>
 
         {/* Submit */}
-        <div className="flex items-end">
+        <div className="flex items-center justify-end border-t border-slate-100 pt-3 sm:col-span-2 dark:border-white/10">
           <button
             type="submit"
             disabled={formik.isSubmitting}
@@ -248,8 +237,8 @@ export default function UserForm({
               </>
             ) : (
               <>
-                <Plus size={16} />
-                Add user
+                <UserPlus size={16} />
+                Create User
               </>
             )}
           </button>
@@ -291,8 +280,17 @@ function Field({
           type={type}
           placeholder={placeholder}
           value={formik.values[name]}
-          onChange={formik.handleChange}
+          onChange={(event) => {
+            if (name === "mobile") {
+              formik.setFieldValue(name, event.target.value.replace(/[^0-9]/g, "").slice(0, 10));
+            } else {
+              formik.handleChange(event);
+            }
+          }}
           onBlur={formik.handleBlur}
+          inputMode={name === "mobile" ? "numeric" : undefined}
+          disabled={formik.isSubmitting}
+          aria-invalid={!!error}
           maxLength={maxLength}
           className={inputClass(error, "pl-10 pr-3")}
         />

@@ -1,32 +1,40 @@
 require("dotenv").config();
-
+const cookieParser = require("cookie-parser");
 const express = require("express");
-const db = require("./src/model/db");
 const internalClientRouter = require("./src/routes/internalClientRoute");
+const clientProfileRouter = require("./src/routes/clientProfileRoute");
+const clientTerms = require("./src/config/clientTerms");
+const clientVehicleRouter = require("./src/routes/clientVehicleRoute");
+const clientDriverRouter = require("./src/routes/clientDriverRoute");
+
 const app = express();
 
 app.use(express.json());
+app.use(cookieParser());
 
-app.get("/health", async (req, res) => {
-  try {
-    await db.query("SELECT 1");
 
-    return res.status(200).json({
-      success: true,
-      service: "client-service",
-      message: "Client Service and database are running",
-    });
-  } catch (error) {
-    console.error("Client database error:", error.message);
-
+app.get("/api/client/terms", (req, res) => {
+  if (!clientTerms.content?.trim()) {
     return res.status(503).json({
       success: false,
-      message: "Client database connection failed",
+      message: "Terms and Conditions are not configured",
     });
   }
+
+  return res.status(200).json({
+    success: true,
+    data: {
+      version: clientTerms.version,
+      content: clientTerms.content,
+    },
+  });
 });
 
-app.use('/',internalClientRouter)
+
+app.use("/",internalClientRouter);
+app.use("/", clientProfileRouter);
+app.use("/",clientVehicleRouter);
+app.use("/", clientDriverRouter);
 
 const PORT = process.env.SERVER_PORT || 5004;
 

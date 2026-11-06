@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import useDepartmentStore from "../store/departmentStore";
 import Swal from "sweetalert2";
 import {
   getUsers, getDepartments,
@@ -10,7 +11,8 @@ import {
 
 export default function useUsers() {
   const [users, setUsers] = useState([]);
-  const [departments, setDepartments] = useState([]);
+  const departments=useDepartmentStore((state)=> state.departments);
+  const setDepartments=useDepartmentStore((state)=>state.setDepartments);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchTerm, updateSearch] = useState("");
@@ -20,6 +22,14 @@ export default function useUsers() {
   const [limit, updateLimit] = useState(10);
   const [pagination, setPagination] = useState({ page: 1, total: 0, totalPages: 1 });
   const [stats, setStats] = useState({ total: 0, active: 0, inactive: 0 });
+  const [sortBy, updateSortBy] = useState("user_id");
+  const [sortOrder, updateSortOrder] = useState("desc");
+
+  const setSorting = (column, direction) => {
+    updateSortBy(column);
+    updateSortOrder(direction);
+    setPage(1);
+  };
 
   // Old request late aaye to uska result latest list ko replace na kare.
   const requestNumber = useRef(0);
@@ -41,7 +51,7 @@ export default function useUsers() {
     try {
       const result = await getUsers({
         search: searchTerm, status: statusFilter,
-        department: departmentFilter, page, limit,
+        department: departmentFilter, page, limit, sortBy, sortOrder,
       });
       if (currentRequest !== requestNumber.current) return;
       setUsers(result.users);
@@ -54,7 +64,7 @@ export default function useUsers() {
     } finally {
       if (currentRequest === requestNumber.current) setLoading(false);
     }
-  }, [searchTerm, statusFilter, departmentFilter, page, limit]);
+  }, [searchTerm, statusFilter, departmentFilter, page, limit, sortBy, sortOrder]);
 
   useEffect(() => {
     // Typing rukne ke 300ms baad request bhejo.
@@ -72,7 +82,7 @@ export default function useUsers() {
       if (!cancelled) setDepartments(data);
     }).catch((error) => { if (!cancelled) showError(error); });
     return () => { cancelled = true; };
-  }, []);
+  }, [setDepartments]);
 
   const loadData = async () => {
     setRefreshing(true);
@@ -105,6 +115,7 @@ export default function useUsers() {
 
   return {
     users, departments, loading, refreshing, pagination, stats,
+    sortBy, sortOrder, setSorting,
     searchTerm, setSearchTerm, statusFilter, setStatusFilter,
     departmentFilter, setDepartmentFilter, page, setPage, limit, setLimit,
     loadData, loadUsers, addUser, updateUser, removeUser, changeUserStatus,

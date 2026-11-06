@@ -1,4 +1,3 @@
-
 import {
   Building2,
   Edit3,
@@ -67,20 +66,19 @@ export default function DepartmentList({
         <>
           {/* Desktop Table */}
           <div className="hidden overflow-x-auto md:block">
-            <table className="w-full min-w-[650px]">
+            <table className="w-full min-w-[480px]">
               <thead>
                 <tr className="border-b border-slate-200/80 bg-slate-50/80 text-left dark:border-white/[0.08] dark:bg-white/[0.04]">
                   {[
                     "No.",
                     "Department",
                     "Department ID",
-                    "Status",
                     "Actions",
                   ].map((heading) => (
                     <th
                       key={heading}
                       className={`px-4 py-3 text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400 ${
-                        heading === "Actions" ? "text-right" : ""
+                        heading === "Actions" ? "text-left" : heading === "No." ? "w-16 text-center" : ""
                       }`}
                     >
                       {heading}
@@ -96,7 +94,7 @@ export default function DepartmentList({
                     className="transition-colors duration-200 hover:bg-violet-50/50 dark:hover:bg-violet-400/[0.05]"
                   >
                     {/* Number */}
-                    <td className="px-4 py-3 text-xs text-slate-500 dark:text-slate-400">
+                    <td className="w-16 px-4 py-3 text-center text-xs tabular-nums text-slate-500 dark:text-slate-400">
                       {String(index + 1).padStart(2, "0")}
                     </td>
 
@@ -122,21 +120,13 @@ export default function DepartmentList({
                     {/* Department ID */}
                     <td className="px-4 py-3">
                       <span className="inline-flex rounded-lg border border-slate-200/70 bg-slate-100/80 px-2.5 py-1 text-xs font-semibold text-slate-600 dark:border-white/10 dark:bg-white/[0.06] dark:text-slate-300">
-                        #{department.department_id}
-                      </span>
-                    </td>
-
-                    {/* Status */}
-                    <td className="px-4 py-3">
-                      <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-400">
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                        Available
+                        {department.department_code || "—"}
                       </span>
                     </td>
 
                     {/* Actions */}
                     <td className="px-4 py-3">
-                      <div className="flex justify-end gap-2">
+                      <div className="flex items-center justify-start gap-2">
                         <button
                           type="button"
                           onClick={() => onEdit(department)}
@@ -183,15 +173,12 @@ export default function DepartmentList({
                       </p>
 
                       <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-                        #{department.department_id} · Department {index + 1}
+                        {department.department_code || "—"} · Department {index + 1}
                       </p>
                     </div>
                   </div>
 
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-400">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                    Available
-                  </span>
+
                 </div>
 
                 {/* Mobile Actions */}

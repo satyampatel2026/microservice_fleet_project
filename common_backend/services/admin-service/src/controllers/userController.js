@@ -1,7 +1,6 @@
 const connection = require("../model/db");
 const bcrypt = require("bcrypt");
 
-
 // ================= TOTAL USERS =================
 
 const totalUsers = async (req, res) => {
@@ -24,17 +23,10 @@ const totalUsers = async (req, res) => {
   }
 };
 
-
 // ================= ADD USER =================
 
 const postUser = async (req, res) => {
-  const {
-    full_name,
-    email,
-    mobile,
-    password,
-    department_id,
-  } = req.body;
+  const { full_name, email, mobile, password, department_id } = req.body;
 
   if (
     !full_name?.trim() ||
@@ -45,16 +37,22 @@ const postUser = async (req, res) => {
   ) {
     return res.status(400).json({
       success: false,
-      message: "Valid name, email, mobile and password (minimum 8 characters) required",
+      message:
+        "Valid name, email, mobile and password (minimum 8 characters) required",
     });
   }
 
   let userId = null;
+  let dbConnection;
 
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const [result] = await connection.query(
+    // Profile INSERT aur employee_code UPDATE saath commit honge.
+    dbConnection = await connection.getConnection();
+    await dbConnection.beginTransaction();
+
+    const [result] = await dbConnection.query(
       `INSERT INTO users
        (full_name, email, mobile, password, department_id)
        VALUES (UPPER(?), ?, ?, ?, ?)`,
@@ -64,10 +62,20 @@ const postUser = async (req, res) => {
         mobile,
         hashedPassword,
         department_id || null,
-      ]
+      ],
     );
 
     userId = result.insertId;
+    const employeeCode = "FLT-EMP-" + String(userId).padStart(4, "0");
+
+    await dbConnection.query(
+      "UPDATE users SET employee_code = ? WHERE user_id = ?",
+      [employeeCode, userId],
+    );
+
+    await dbConnection.commit();
+    dbConnection.release();
+    dbConnection = null;
 
     // Auth Service me employee ka login account create karo
     const response = await fetch(
@@ -76,8 +84,7 @@ const postUser = async (req, res) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-internal-service-key":
-            process.env.INTERNAL_SERVICE_KEY,
+          "x-internal-service-key": process.env.INTERNAL_SERVICE_KEY,
         },
         body: JSON.stringify({
           admin_id: userId,
@@ -86,7 +93,7 @@ const postUser = async (req, res) => {
           status: "active",
         }),
         signal: AbortSignal.timeout(5000),
-      }
+      },
     );
 
     if (!response.ok) {
@@ -95,7 +102,7 @@ const postUser = async (req, res) => {
       console.error(
         "Auth account provisioning failed:",
         response.status,
-        errorData.message
+        errorData.message,
       );
 
       return res.status(502).json({
@@ -110,8 +117,14 @@ const postUser = async (req, res) => {
       success: true,
       message: "Employee and login account created successfully",
       user_id: userId,
+      employee_code: employeeCode,
     });
   } catch (error) {
+    if (dbConnection) {
+      await dbConnection.rollback().catch(() => {});
+      userId = null;
+    }
+
     console.error("Add User Error:", error);
 
     return res.status(500).json({
@@ -119,24 +132,53 @@ const postUser = async (req, res) => {
       message: "Unable to create employee",
       ...(userId ? { user_id: userId } : {}),
     });
+  } finally {
+    if (dbConnection) dbConnection.release();
   }
 };
-
 
 // ================= GET USERS =================
 
 const getUser = async (req, res) => {
-  const search = typeof req.query.search === "string" ? req.query.search.trim() : "";
+  const search =
+    typeof req.query.search === "string" ? req.query.search.trim() : "";
   const status = req.query.status || "all";
   const department = req.query.department || "all";
   let page = Number(req.query.page || 1);
   const limit = Number(req.query.limit || 10);
+  const sortBy = req.query.sortBy || "user_id";
+  const sortOrder = req.query.sortOrder || "desc";
 
-  if (!Number.isSafeInteger(page) || page < 1 ||
-      !Number.isSafeInteger(limit) || limit < 1 || limit > 100 ||
-      search.length > 100 || !["all", "active", "inactive"].includes(status) ||
-      (department !== "all" && (!Number.isSafeInteger(Number(department)) || Number(department) <= 0))) {
-    return res.status(400).json({ success: false, message: "Invalid search or pagination values" });
+  // SQL mein sirf ye fixed column names aur directions allow hain.
+  if (
+    !["user_id", "full_name"].includes(sortBy) ||
+    !["asc", "desc"].includes(sortOrder)
+  ) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Invalid sorting option" });
+  }
+
+  const direction = sortOrder === "asc" ? "ASC" : "DESC";
+  const orderBy =
+    sortBy === "full_name"
+      ? `u.full_name ${direction}, u.user_id ${direction}`
+      : `u.user_id ${direction}`;
+
+  if (
+    !Number.isSafeInteger(page) ||
+    page < 1 ||
+    !Number.isSafeInteger(limit) ||
+    limit < 1 ||
+    limit > 100 ||
+    search.length > 100 ||
+    !["all", "active", "inactive"].includes(status) ||
+    (department !== "all" &&
+      (!Number.isSafeInteger(Number(department)) || Number(department) <= 0))
+  ) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Invalid search or pagination values" });
   }
 
   // Har selected filter ke liye SQL condition aur value jodo.
@@ -146,9 +188,15 @@ const getUser = async (req, res) => {
   if (search) {
     // ! escape character hai. User ka % ya _ normal text ki tarah search hoga.
     const text = `%${search.replace(/[!%_]/g, "!$&")}%`;
+    const codeMatch = /^FLT-EMP-(\d+)$/i.exec(search);
+    const codeId = codeMatch ? Number(codeMatch[1]) : null;
+    const validCodeId =
+      Number.isSafeInteger(codeId) && codeId > 0 ? codeId : null;
+
     conditions.push(`(u.full_name LIKE ? ESCAPE '!' OR u.email LIKE ? ESCAPE '!'
-      OR u.mobile LIKE ? ESCAPE '!' OR CAST(u.user_id AS CHAR) LIKE ? ESCAPE '!')`);
-    values.push(text, text, text, text);
+      OR u.mobile LIKE ? ESCAPE '!' OR CAST(u.user_id AS CHAR) LIKE ? ESCAPE '!'
+      OR u.user_id = ?)`);
+    values.push(text, text, text, text, validCodeId);
   }
   if (status !== "all") {
     conditions.push("u.status = ?");
@@ -164,7 +212,8 @@ const getUser = async (req, res) => {
   try {
     // Matching records count karo; sirf current page ka count nahi.
     const [counts] = await connection.query(
-      `SELECT COUNT(*) AS total FROM users u ${where}`, values
+      `SELECT COUNT(*) AS total FROM users u ${where}`,
+      values,
     );
     const total = Number(counts[0].total);
     const totalPages = Math.max(1, Math.ceil(total / limit));
@@ -172,14 +221,15 @@ const getUser = async (req, res) => {
     const offset = (page - 1) * limit;
 
     const [users] = await connection.query(
-      `SELECT u.user_id, u.full_name, u.email, u.mobile,
+      `SELECT u.user_id, u.employee_code, u.full_name, u.email, u.mobile,
+              u.photo_url, u.personal_address, u.gender,
               u.department_id, u.status, u.created_at, d.department_name
        FROM users u
        LEFT JOIN departments d ON u.department_id = d.department_id
        ${where}
-       ORDER BY u.user_id DESC
+       ORDER BY ${orderBy}
        LIMIT ? OFFSET ?`,
-      [...values, limit, offset]
+      [...values, limit, offset],
     );
 
     // Full database stats: page/search badalne se ye counts nahi badlenge.
@@ -187,11 +237,12 @@ const getUser = async (req, res) => {
       `SELECT COUNT(*) AS total,
          COALESCE(SUM(status = 'active'), 0) AS active,
          COALESCE(SUM(status = 'inactive'), 0) AS inactive
-       FROM users`
+       FROM users`,
     );
 
     return res.status(200).json({
-      success: true, users,
+      success: true,
+      users: users,
       pagination: { page, limit, total, totalPages },
       stats: {
         total: Number(stats[0].total),
@@ -201,7 +252,9 @@ const getUser = async (req, res) => {
     });
   } catch (error) {
     console.error("Get Users Error:", error.message);
-    return res.status(500).json({ success: false, message: "Unable to load users" });
+    return res
+      .status(500)
+      .json({ success: false, message: "Unable to load users" });
   }
 };
 
@@ -236,7 +289,7 @@ const updateUser = async (req, res) => {
       `SELECT user_id, email, status
        FROM users
        WHERE user_id = ?`,
-      [userId]
+      [userId],
     );
 
     if (users.length === 0) {
@@ -269,7 +322,7 @@ const updateUser = async (req, res) => {
           status,
         }),
         signal: AbortSignal.timeout(5000),
-      }
+      },
     );
 
     if (!response.ok) {
@@ -294,7 +347,7 @@ const updateUser = async (req, res) => {
         department_id || null,
         status,
         userId,
-      ]
+      ],
     );
 
     return res.status(200).json({
@@ -335,7 +388,7 @@ const deleteUser = async (req, res) => {
   try {
     const [users] = await connection.query(
       "SELECT user_id FROM users WHERE user_id = ?",
-      [userId]
+      [userId],
     );
 
     if (!users.length) {
@@ -359,14 +412,14 @@ const deleteUser = async (req, res) => {
           email: await (async () => {
             const [[user]] = await connection.query(
               "SELECT email FROM users WHERE user_id = ?",
-              [userId]
+              [userId],
             );
             return user.email;
           })(),
           status: "inactive",
         }),
         signal: AbortSignal.timeout(5000),
-      }
+      },
     );
 
     if (!disableResponse.ok) {
@@ -380,7 +433,7 @@ const deleteUser = async (req, res) => {
     // Isse role_assign aur doosre foreign-key relations safe rahenge.
     await connection.query(
       "UPDATE users SET status = 'inactive' WHERE user_id = ?",
-      [userId]
+      [userId],
     );
 
     return res.status(200).json({
@@ -420,32 +473,31 @@ const updateUserStatus = async (req, res) => {
   try {
     const actorId = Number(req.userId);
 
-if (!Number.isSafeInteger(actorId) || actorId <= 0) {
-  return res.status(401).json({
-    success: false,
-    message: "Authentication required",
-  });
-}
+    if (!Number.isSafeInteger(actorId) || actorId <= 0) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required",
+      });
+    }
 
-const [actorRoles] = await connection.query(
-  `SELECT r.role_name
+    const [actorRoles] = await connection.query(
+      `SELECT r.role_name
    FROM role_assign ra
    INNER JOIN roles r ON r.role_id = ra.role_id
    WHERE ra.user_id = ?`,
-  [actorId]
-);
+      [actorId],
+    );
 
-const canManageUsers = actorRoles.some(
-  ({ role_name }) =>
-    ["Admin", "SUPER ADMIN"].includes(role_name)
-);
+    const canManageUsers = actorRoles.some(({ role_name }) =>
+      ["Admin", "SUPER ADMIN"].includes(role_name),
+    );
 
-if (!canManageUsers) {
-  return res.status(403).json({
-    success: false,
-    message: "You do not have permission to change user status",
-  });
-}
+    if (!canManageUsers) {
+      return res.status(403).json({
+        success: false,
+        message: "You do not have permission to change user status",
+      });
+    }
     // Apna account inactive karne se prevent karo
     if (Number(req.userId) === userId && status === "inactive") {
       return res.status(403).json({
@@ -455,47 +507,47 @@ if (!canManageUsers) {
     }
 
     // Employee ka current email aur status nikalo
-const [users] = await connection.query(
-  "SELECT email, status FROM users WHERE user_id = ?",
-  [userId]
-);
+    const [users] = await connection.query(
+      "SELECT email, status FROM users WHERE user_id = ?",
+      [userId],
+    );
 
-if (users.length === 0) {
-  return res.status(404).json({
-    success: false,
-    message: "User not found",
-  });
-}
+    if (users.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
 
-// Auth Service ko update karo
-const response = await fetch(
-  `http://localhost:5001/internal/auth/admin-accounts/${userId}`,
-  {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-      "x-internal-service-key": process.env.INTERNAL_SERVICE_KEY,
-    },
-    body: JSON.stringify({
-      email: users[0].email,
-      status,
-    }),
-    signal: AbortSignal.timeout(5000),
-  }
-);
+    // Auth Service ko update karo
+    const response = await fetch(
+      `http://localhost:5001/internal/auth/admin-accounts/${userId}`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "x-internal-service-key": process.env.INTERNAL_SERVICE_KEY,
+        },
+        body: JSON.stringify({
+          email: users[0].email,
+          status,
+        }),
+        signal: AbortSignal.timeout(5000),
+      },
+    );
 
-if (!response.ok) {
-  return res.status(502).json({
-    success: false,
-    message: "Login account status update failed",
-  });
-}
+    if (!response.ok) {
+      return res.status(502).json({
+        success: false,
+        message: "Login account status update failed",
+      });
+    }
 
-// Auth Service update hone ke baad Admin DB update karo
-const [result] = await connection.query(
-  "UPDATE users SET status = ? WHERE user_id = ?",
-  [status, userId]
-);
+    // Auth Service update hone ke baad Admin DB update karo
+    const [result] = await connection.query(
+      "UPDATE users SET status = ? WHERE user_id = ?",
+      [status, userId],
+    );
 
     if (result.affectedRows === 0) {
       return res.status(404).json({
@@ -525,5 +577,6 @@ module.exports = {
   postUser,
   getUser,
   updateUser,
-  deleteUser,updateUserStatus
+  deleteUser,
+  updateUserStatus,
 };

@@ -17,14 +17,6 @@ app.use(cors({
   credentials: true,
 }));
 
-app.get("/health", (req, res) => {
-  res.json({
-    success: true,
-    service: "api-gateway",
-    message: "API Gateway is running",
-  });
-});
-
 const proxyTo = (target) =>
   createProxyMiddleware({
     target,
@@ -39,9 +31,12 @@ const proxyTo = (target) =>
 
 app.use(
   [
+    // Admin authentication
     "/api/admin/login",
     "/api/admin/logout",
     "/api/admin/auth",
+
+    // Partner authentication
     "/api/partner/login",
     "/api/partner/logout",
     "/api/partner/register",
@@ -49,9 +44,18 @@ app.use(
     "/api/partner/verify-otp",
     "/api/partner/reset-password",
     "/api/partner/auth",
+
+    // Client authentication
+    "/api/client/register",
+    "/api/client/login",
+    "/api/client/logout",
+    "/api/client/auth",
+    "/api/client/forgot-password",
+    "/api/client/verify-otp",
+    "/api/client/reset-password",
   ],
   proxyTo(process.env.AUTH_SERVICE_URL)
-);
+);  
 
 // ===============================
 // PARTNER SERVICE - PORT 5003
@@ -64,7 +68,8 @@ app.use(
     "/api/admin/kyc",
     "/api/partner/kyc",
     "/api/partner/my-services",
-    "/api/partners/me"
+    "/api/partners/me",
+    "/api/partner/profile",
   ],
   proxyTo(process.env.PARTNER_SERVICE_URL)
 );
@@ -83,8 +88,34 @@ app.use(
     "/api/admin/categories",
     "/api/admin/services",
     "/api/partner/service-catalog",
+    "/api/admin/clients",
+    "/api/admin/profile",
+    "/api/admin/verification",
   ],
   proxyTo(process.env.USER_SERVICE_URL)
+);
+
+// ===============================
+// TRACKING SERVICE - PORT 5005
+// ===============================
+app.use(
+  [
+    "/api/tracking",
+    "/api/client/vehicles/:vehicleId/tracking-link",
+  ],
+  proxyTo(process.env.TRACKING_SERVICE_URL || "http://localhost:5005")
+);
+// ===============================
+// CLIENT SERVICE - PORT 5004
+// ===============================
+
+app.use(
+  ["/api/client/terms",
+  "/api/client/profile",
+ "/api/client/vehicles",
+ "/api/client/drivers",
+],
+  proxyTo(process.env.CLIENT_SERVICE_URL)
 );
 
 const PORT = process.env.PORT || 5000;

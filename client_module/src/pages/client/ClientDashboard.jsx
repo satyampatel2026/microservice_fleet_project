@@ -1,150 +1,153 @@
-
-import {
-  CalendarDays,
-  Clock3,
-  CheckCircle2,
-  Activity,
-  ArrowUpRight,
-  Wrench,
-} from "lucide-react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-
-const stats = [
-  { title: "Total Bookings", value: "12", icon: CalendarDays },
-  { title: "Pending Requests", value: "03", icon: Clock3 },
-  { title: "Completed", value: "08", icon: CheckCircle2 },
-  { title: "Active Services", value: "01", icon: Activity },
-];
-
-const recentBookings = [
-  { id: "BK-1001", service: "Vehicle Maintenance", date: "12 Oct 2026", status: "Completed" },
-  { id: "BK-1002", service: "Vehicle Washing", date: "14 Oct 2026", status: "In Progress" },
-  { id: "BK-1003", service: "Battery Services", date: "17 Oct 2026", status: "Pending" },
-];
-
-const statusStyles = {
-  Completed: "bg-emerald-500/10 text-emerald-300",
-  "In Progress": "bg-sky-500/10 text-sky-300",
-  Pending: "bg-amber-500/10 text-amber-300",
-};
+import { Truck, ShieldCheck, Clock3, Radio, RefreshCw, ArrowUpRight } from "lucide-react";
+import { getVehicles } from "../../services/vehicleService";
+import { getClientTracking } from "../../services/trackingMapService";
 
 export default function ClientDashboard() {
+  const [vehicles, setVehicles] = useState([]);
+  const [tracking, setTracking] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [reload, setReload] = useState(0);
+  const [updatedAt, setUpdatedAt] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    let timer;
+    const controller = new AbortController();
+
+    async function loadDashboard() {
+      try {
+        // Dono existing APIs hain: SQL vehicles aur MongoDB tracking.
+        const [vehicleResult, trackingResult] = await Promise.all([
+          getVehicles(),
+          getClientTracking(controller.signal),
+        ]);
+
+        if (cancelled) return;
+        setVehicles(vehicleResult.data);
+        setTracking(trackingResult.data);
+        setUpdatedAt(new Date());
+        setError("");
+      } catch (error) {
+        if (!cancelled) setError(error.message);
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+          // Current request complete hone ke baad agla refresh.
+          timer = setTimeout(loadDashboard, 15000);
+        }
+      }
+    }
+
+    loadDashboard();
+    return () => {
+      cancelled = true;
+      controller.abort();
+      clearTimeout(timer);
+    };
+  }, [reload]);
+
+  // Ye numbers API se aaye records ko count karke milte hain.
+  const verified = vehicles.filter(vehicle => vehicle.approval_status === "verified").length;
+  const pending = vehicles.filter(vehicle => vehicle.approval_status === "pending").length;
+  const rejected = vehicles.filter(vehicle => vehicle.approval_status === "rejected").length;
+  const active = vehicles.filter(vehicle => vehicle.status === "active").length;
+  const live = tracking.filter(vehicle => vehicle.trackingStatus === "online").length;
+  const offline = tracking.filter(vehicle => vehicle.trackingStatus === "offline").length;
+  const noLocation = tracking.filter(vehicle => vehicle.trackingStatus === "no_location").length;
+
+  const cards = [
+    { title: "Total Vehicles", value: vehicles.length, icon: Truck },
+    { title: "Verified", value: verified, icon: ShieldCheck },
+    { title: "Pending Review", value: pending, icon: Clock3 },
+    { title: "Live Tracking", value: live, icon: Radio },
+  ];
+
   return (
-    <div className="space-y-9">
-      <div className="flex flex-wrap items-center justify-between gap-5">
+    <div className="space-y-4">
+      <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-sm text-violet-400">Dashboard Overview</p>
-          <h2 className="mt-2 text-3xl font-semibold tracking-tight">
-            Welcome back!
-          </h2>
-          <p className="mt-3 text-sm text-gray-400">
-            Here's an overview of your fleet service activity.
-          </p>
+          <h1 className="text-xl font-semibold text-white">Dashboard</h1>
+          <p className="mt-1 text-xs text-slate-400">Your vehicles, verification and location updates.</p>
         </div>
+        <button type="button" disabled={loading} onClick={() => {
+          setLoading(true);
+          setReload(reload + 1);
+        }} className="inline-flex items-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-xs text-slate-200 hover:bg-white/5 disabled:opacity-50">
+          <RefreshCw size={14} className={loading ? "animate-spin" : ""} /> Refresh
+        </button>
+      </header>
 
-        <Link
-          to="/client/services"
-          className="inline-flex items-center gap-2 rounded-xl bg-violet-500 px-5 py-3 text-sm font-semibold transition hover:bg-violet-400"
-        >
-          <Wrench size={18} />
-          Explore Services
-        </Link>
-      </div>
-
-      <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-        {stats.map(({ title, value, icon: Icon }) => (
-          <div
-            key={title}
-            className="rounded-2xl border border-white/10 bg-[#111521] p-6"
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-400">{title}</span>
-              <span className="rounded-xl bg-violet-500/10 p-3 text-violet-300">
-                <Icon size={20} />
-              </span>
-            </div>
-
-            <p className="mt-6 text-3xl font-semibold">{value}</p>
-            <p className="mt-2 text-xs text-gray-500">Sample data</p>
-          </div>
-        ))}
-      </div>
-
-      <div className="grid gap-6 xl:grid-cols-3">
-        <section className="overflow-hidden rounded-2xl border border-white/10 bg-[#111521] xl:col-span-2">
-          <div className="flex items-center justify-between border-b border-white/10 px-6 py-5">
-            <div>
-              <h3 className="text-lg font-semibold">Recent Bookings</h3>
-              <p className="mt-1 text-xs text-gray-500">
-                Your latest service requests
-              </p>
-            </div>
-
-            <Link
-              to="/client/bookings"
-              className="flex items-center gap-1 text-sm text-violet-300 hover:text-violet-200"
-            >
-              View All <ArrowUpRight size={16} />
-            </Link>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[570px] text-left text-sm">
-              <thead className="border-b border-white/10 text-gray-500">
-                <tr>
-                  <th className="px-6 py-4 font-medium">Booking ID</th>
-                  <th className="px-6 py-4 font-medium">Service</th>
-                  <th className="px-6 py-4 font-medium">Date</th>
-                  <th className="px-6 py-4 font-medium">Status</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {recentBookings.map((booking) => (
-                  <tr key={booking.id} className="border-b border-white/5 last:border-0">
-                    <td className="px-6 py-5 text-violet-300">{booking.id}</td>
-                    <td className="px-6 py-5">{booking.service}</td>
-                    <td className="px-6 py-5 text-gray-400">{booking.date}</td>
-                    <td className="px-6 py-5">
-                      <span
-                        className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs ${
-                          statusStyles[booking.status]
-                        }`}
-                      >
-                        {booking.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        <section className="rounded-2xl border border-white/10 bg-[#111521] p-6">
-          <h3 className="text-lg font-semibold">Quick Actions</h3>
-          <p className="mt-2 text-sm text-gray-500">
-            Access frequently used sections.
-          </p>
-
-          <div className="mt-7 space-y-3">
-            {[
-              { label: "Browse Services", path: "/client/services" },
-              { label: "View My Bookings", path: "/client/bookings" },
-              { label: "Manage Profile", path: "/client/profile" },
-            ].map((action) => (
-              <Link
-                key={action.path}
-                to={action.path}
-                className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-4 py-4 text-sm transition hover:border-violet-400/30 hover:bg-white/10"
-              >
-                {action.label}
-                <ArrowUpRight size={17} className="text-violet-300" />
-              </Link>
+      {loading ? (
+        <p role="status" className="py-10 text-center text-sm text-slate-400">Loading dashboard...</p>
+      ) : error ? (
+        <div role="alert" className="rounded-xl border border-red-400/20 bg-red-400/10 p-4 text-sm text-red-200">
+          {error}. Please refresh to try again. Dashboard also retries automatically.
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            {cards.map(({ title, value, icon: Icon }) => (
+              <div key={title} className="rounded-xl border border-white/10 bg-[#111521] p-4">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-xs text-slate-400">{title}</p>
+                  <Icon size={17} className="text-violet-300" />
+                </div>
+                <p className="mt-3 text-2xl font-semibold text-white">{value}</p>
+              </div>
             ))}
           </div>
-        </section>
-      </div>
+
+          <div className="flex flex-wrap gap-x-5 gap-y-2 px-1 text-xs text-slate-400">
+            <span>Active: <strong className="text-emerald-300">{active}</strong></span>
+            <span>Inactive: <strong className="text-slate-200">{vehicles.length - active}</strong></span>
+            <span>Rejected: <strong className="text-red-300">{rejected}</strong></span>
+            <span>Tracking offline: <strong className="text-red-300">{offline}</strong></span>
+            <span>No location yet: <strong className="text-slate-200">{noLocation}</strong></span>
+          </div>
+
+          <section className="overflow-hidden rounded-xl border border-white/10 bg-[#111521]">
+            <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+              <h2 className="text-sm font-semibold text-white">Latest Vehicles</h2>
+              <Link to="/client/vehicles" className="inline-flex items-center gap-1 text-xs text-violet-300">View all <ArrowUpRight size={14} /></Link>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[520px] text-left text-xs">
+                <thead className="bg-white/[0.02] text-slate-400">
+                  <tr>
+                    <th className="px-4 py-3 font-medium">Vehicle</th>
+                    <th className="px-4 py-3 font-medium">Type</th>
+                    <th className="px-4 py-3 font-medium">Verification</th>
+                    <th className="px-4 py-3 font-medium">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {vehicles.slice(0, 5).map(vehicle => (
+                    <tr key={vehicle.vehicle_id} className="hover:bg-white/[0.03]">
+                      <td className="px-4 py-3 font-medium text-white">{vehicle.vehicle_number}</td>
+                      <td className="px-4 py-3 text-slate-300">{vehicle.vehicle_type}</td>
+                      <td className="px-4 py-3">
+                        <span className={`rounded-md px-2 py-1 capitalize ${vehicle.approval_status === "verified" ? "bg-emerald-400/10 text-emerald-300" : vehicle.approval_status === "rejected" ? "bg-red-400/10 text-red-300" : "bg-amber-400/10 text-amber-300"}`}>{vehicle.approval_status}</span>
+                      </td>
+                      <td className="px-4 py-3 capitalize text-slate-300">{vehicle.status}</td>
+                    </tr>
+                  ))}
+                  {vehicles.length === 0 && <tr><td colSpan={4} className="px-4 py-10 text-center text-slate-400">No vehicles added yet. Add your first vehicle to get started.</td></tr>}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <Link to="/client/vehicles" className="rounded-lg bg-violet-500 px-4 py-2 text-xs font-medium text-white hover:bg-violet-400">Manage Vehicles</Link>
+            <Link to="/client/tracking" className="rounded-lg border border-white/10 px-4 py-2 text-xs text-slate-200 hover:bg-white/5">Open Tracking Map</Link>
+            <p className="text-[11px] text-slate-500">Updated {updatedAt?.toLocaleTimeString()} · Auto refresh: 15 seconds</p>
+          </div>
+          <p className="text-[11px] text-slate-500">Tracking counts cover verified vehicles. Live means a recent location update, and does not indicate whether the vehicle is moving.</p>
+        </>
+      )}
     </div>
   );
 }

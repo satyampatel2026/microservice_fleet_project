@@ -106,7 +106,7 @@ const KycFormModal = ({
               </h2>
 
               <p className="mt-0.5 text-[10px] text-slate-500 sm:text-[11px]">
-                Manage business details and verification documents
+                update business details or documents.
               </p>
             </div>
           </div>
@@ -282,13 +282,12 @@ const KycFormModal = ({
                   </h3>
 
                   <p className="mt-0.5 text-[10px] leading-4 text-slate-500">
-                    Existing documents are shown below. Select a new
-                    file only if you want to replace it.
+                    JPEG or PDF · Maximum 200 KB per file. New files save when you submit KYC.
                   </p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+              <div className="divide-y divide-slate-100 overflow-hidden rounded-lg border border-[#E2EBE8] bg-white">
                 {[
                   "pan_document",
                   "aadhaar_document",
@@ -297,14 +296,17 @@ const KycFormModal = ({
                   <DocumentCard
                     key={type}
                     type={type}
-                    document={kyc?.[type]}
+                    document={kyc?.[type] ? {
+                      url: `http://localhost:5000/api/partner/kyc/document/${type.replace("_document", "")}`,
+                      name: "Existing document",
+                    } : null}
                     selectedFile={formik.values[type]}
                     error={getError(type)}
                     onFileChange={handleFileChange}
                     onRemove={() =>
                       formik.setFieldValue(type, null)
                     }
-                    disabled={false}
+                    disabled={submitting}
                   />
                 ))}
               </div>

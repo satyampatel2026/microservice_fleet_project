@@ -7,6 +7,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import PartnerKyc from "./pages/PartnerKyc";
 import MyServices from "./pages/MyServices";
 import Employees from "./pages/Employees";
+import PartnerProfile from "./pages/PartnerProfile";
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
 
       {/* Protected Routes (Inke andar jo bhi pages honge, sab par ProtectedRoute chalega) */}
       <Route element={<ProtectedRoute />}>
+       <Route path="/partner/profile" element={<PartnerProfile />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/partner/kyc" element={<PartnerKyc />} /> {/* KYC ko bhi yahan shift kar diya */}
         <Route path="/partner/services" element={<MyServices />} />

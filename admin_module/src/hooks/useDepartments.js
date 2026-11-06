@@ -3,7 +3,7 @@ import {
   useEffect,
   useState,
 } from "react";
-
+import useDepartmentStore from "../store/departmentStore";
 import {
   getDepartments,
   addDepartment,
@@ -12,8 +12,8 @@ import {
 } from "../services/departmentService";
 
 export default function useDepartments() {
-  const [departments, setDepartments] =
-    useState([]);
+  const departments=useDepartmentStore((state)=>state.departments);
+  const setDepartments=useDepartmentStore((state)=>state.setDepartments);
 
   const [loading, setLoading] =
     useState(true);
@@ -36,7 +36,7 @@ export default function useDepartments() {
         setRefreshing(false);
       }
     },
-    []
+    [setDepartments]
   );
 
   useEffect(() => {

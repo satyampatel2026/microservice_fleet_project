@@ -5,20 +5,19 @@ import { motion, AnimatePresence } from "framer-motion";
 
 import AdminSidebar from "../components/admin/AdminSidebar";
 import Navbar from "../components/common/Navbar";
-import Footer from "../components/common/Footer";
 
 export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const [dark, setDark] = useState(() => {
-    return localStorage.getItem("theme") === "dark";
+    try { return localStorage.getItem("theme") === "dark"; } catch { return false; }
   });
 
   const location = useLocation();
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", dark);
-    localStorage.setItem("theme", dark ? "dark" : "light");
+    try { localStorage.setItem("theme", dark ? "dark" : "light"); } catch { /* Mode current page par phir bhi kaam karega. */ }
   }, [dark]);
 
   useEffect(() => {
@@ -26,13 +25,7 @@ export default function AdminLayout() {
   }, [location.pathname]);
 
   return (
-    <div className="relative min-h-screen bg-[#f5f7fb] text-slate-900 transition-colors duration-300 dark:bg-[#090b12] dark:text-slate-100">
-      {/* Subtle background glow */}
-      <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -right-40 top-10 h-[450px] w-[450px] rounded-full bg-violet-500/[0.035] blur-[120px] dark:bg-violet-600/[0.07]" />
-        <div className="absolute -left-40 bottom-0 h-[400px] w-[400px] rounded-full bg-indigo-500/[0.025] blur-[120px] dark:bg-indigo-600/[0.05]" />
-      </div>
-
+    <div className="admin-theme theme-workspace relative h-dvh overflow-hidden transition-colors duration-300">
       {/* Sidebar */}
       <AdminSidebar
         open={sidebarOpen}
@@ -40,7 +33,7 @@ export default function AdminLayout() {
       />
 
       {/* Main workspace */}
-      <div className="relative flex min-h-screen flex-col lg:pl-72">
+      <div className="relative flex h-full min-h-0 flex-col overflow-hidden lg:pl-72">
         {/* Top navigation */}
         <Navbar
           onMenuClick={() => setSidebarOpen(true)}
@@ -49,7 +42,7 @@ export default function AdminLayout() {
         />
 
         {/* Page content */}
-        <main className="relative w-full flex-1 px-4 pb-8 pt-6 sm:px-6 lg:px-8 lg:py-8">
+        <main className="relative min-h-0 w-full flex-1 overflow-y-auto overscroll-contain px-4 pb-8 pt-6 sm:px-6 lg:px-8 lg:py-8">
           <div className="mx-auto w-full max-w-[1600px]">
             <AnimatePresence mode="wait">
               <motion.div
@@ -67,10 +60,8 @@ export default function AdminLayout() {
             </AnimatePresence>
           </div>
         </main>
-
-        {/* Footer */}
-        <Footer />
       </div>
     </div>
   );
 }
+

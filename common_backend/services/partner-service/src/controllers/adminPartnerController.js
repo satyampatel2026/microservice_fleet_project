@@ -9,6 +9,8 @@ const getPartners = async (req, res) => {
       : "";
 
   const status = req.query.status || "";
+  const sort = req.query.sort || "";
+  const kycStatus = req.query.kycStatus || "";
   let page = Number(req.query.page || 1);
   const limit = Number(req.query.limit || 10);
 
@@ -20,7 +22,9 @@ const getPartners = async (req, res) => {
     limit < 1 ||
     limit > 100 ||
     search.length > 100 ||
-    !["", "active", "inactive"].includes(status)
+    !["", "active", "inactive"].includes(status) ||
+    !["", "asc", "desc"].includes(sort) ||
+    !["", "pending", "verified", "rejected", "not_submitted"].includes(kycStatus)
   ) {
     return res.status(400).json({
       success: false,
@@ -38,16 +42,32 @@ const getPartners = async (req, res) => {
       p.partner_name LIKE ? ESCAPE '!'
       OR p.email LIKE ? ESCAPE '!'
       OR p.mobile LIKE ? ESCAPE '!'
+      OR p.partner_code LIKE ? ESCAPE '!'
     )`;
 
     const text = `%${search.replace(/[!%_]/g, "!$&")}%`;
-    values.push(text, text, text);
+    values.push(text, text, text, text);
   }
 
   if (status) {
     where += " AND p.status = ?";
     values.push(status);
   }
+
+  // Count aur list, dono mein wahi KYC filter lagega.
+  if (kycStatus === "not_submitted") {
+    where += " AND NOT EXISTS (SELECT 1 FROM partner_kyc f WHERE f.partner_id = p.partner_id)";
+  } else if (kycStatus) {
+    where += ` AND EXISTS (SELECT 1 FROM partner_kyc f
+      WHERE f.partner_id = p.partner_id AND f.kyc_status = ?
+      AND f.kyc_id = (SELECT MAX(latest.kyc_id) FROM partner_kyc latest WHERE latest.partner_id = p.partner_id))`;
+    values.push(kycStatus);
+  }
+
+  // SQL mein sirf ye fixed strings use hongi; query ka raw sort nahi.
+  let orderBy = "p.created_at DESC, p.partner_id DESC";
+  if (sort === "asc") orderBy = "p.partner_name ASC, p.partner_id ASC";
+  if (sort === "desc") orderBy = "p.partner_name DESC, p.partner_id DESC";
 
   try {
     // 1. Matching partners kitne hain?
@@ -71,9 +91,13 @@ const getPartners = async (req, res) => {
     const [partners] = await connection.query(
       `SELECT
          p.partner_id,
+         p.partner_code,
          p.partner_name,
          p.email,
          p.mobile,
+         p.photo_url,
+         p.personal_address,
+         p.gender,
          p.status,
          p.created_at,
          k.kyc_id,
@@ -86,7 +110,7 @@ const getPartners = async (req, res) => {
            WHERE partner_id = p.partner_id
          )
        ${where}
-       ORDER BY p.created_at DESC, p.partner_id DESC
+       ORDER BY ${orderBy}
        LIMIT ? OFFSET ?`,
       [...values, limit, offset]
     );
@@ -114,15 +138,33 @@ const getPartners = async (req, res) => {
       partner.service_ids = [];
 
       for (const service of partnerServices) {
-        if (service.partner_id === partner.partner_id) {
+        if (Number(service.partner_id) === Number(partner.partner_id)) {
           partner.service_ids.push(service.service_id);
         }
       }
     }
 
+    // Cards: har partner ki latest KYC count karo, search/page se alag.
+    const [stats] = await connection.query(`
+      SELECT COUNT(*) AS total,
+        COALESCE(SUM(k.kyc_status = 'verified'), 0) AS verified,
+        COALESCE(SUM(k.kyc_status = 'rejected'), 0) AS rejected,
+        COALESCE(SUM(k.kyc_status = 'pending'), 0) AS pending
+      FROM partners p
+      LEFT JOIN partner_kyc k ON k.kyc_id = (
+        SELECT MAX(kyc_id) FROM partner_kyc WHERE partner_id = p.partner_id
+      )
+    `);
+
     return res.status(200).json({
       success: true,
       data: partners,
+      stats: {
+        total: Number(stats[0].total),
+        verified: Number(stats[0].verified),
+        rejected: Number(stats[0].rejected),
+        pending: Number(stats[0].pending),
+      },
       pagination: {
         page,
         limit,

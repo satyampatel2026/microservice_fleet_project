@@ -4,11 +4,14 @@ import Sidebar from "../components/sidebar";
 import Navbar from "../components/navbar";
 import Footer from "../components/footer";
 
+const SIDEBAR_WIDTH = "272px";
+
 const Layout = ({ children, activePath }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="flex min-h-screen bg-[#F5F8F7]">
+    <div className="min-h-screen w-full bg-[#F5F8F7]">
+
       {/* SIDEBAR */}
       <Sidebar
         open={sidebarOpen}
@@ -17,19 +20,23 @@ const Layout = ({ children, activePath }) => {
       />
 
       {/* MAIN AREA */}
-      <div className="flex min-h-screen min-w-0 flex-1 flex-col">
+      <div
+        className="flex min-h-screen min-w-0 flex-col transition-all duration-300 lg:ml-[272px]"
+      >
+
         {/* NAVBAR */}
         <Navbar
           onMenuClick={() => setSidebarOpen(true)}
         />
 
         {/* PAGE CONTENT */}
-        <main className="relative flex-1 px-3 py-4 sm:px-4 md:px-5 md:py-5 lg:px-6">
+        <main className="relative w-full min-w-0 flex-1 px-3 py-4 sm:px-4 md:px-5 md:py-5 lg:px-6">
           {children}
         </main>
 
         {/* FOOTER */}
         <Footer />
+
       </div>
     </div>
   );

@@ -26,7 +26,7 @@ partnerKycRouter.post(
   "/api/partner/kyc",
   partnerAuthMiddleware,
 
-  upload.fields([
+  (req, res, next) => upload.fields([
     {
       name: "pan_document",
       maxCount: 1,
@@ -39,7 +39,10 @@ partnerKycRouter.post(
       name: "gst_document",
       maxCount: 1,
     },
-  ]),
+  ])(req, res, (error) => {
+    if (error) return res.status(400).json({ success: false, message: error.code === "LIMIT_FILE_SIZE" ? "Each document must be 200 KB or smaller" : error.message });
+    next();
+  }),
 
   submitKyc
 );

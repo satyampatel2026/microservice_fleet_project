@@ -3,7 +3,6 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 
 import Layout from "../layouts/Layout";
-import KycStatusCard from "../components/kyc/KycStatusCard";
 import KycDetails from "../components/kyc/kycDetails";
 import KycFormModal from "../components/kyc/kycFormModal";
 
@@ -68,19 +67,19 @@ const validationSchema = Yup.object({
 
     pan_document: Yup.mixed().test(
         "pan-document",
-        "PAN document must be PDF, JPG or PNG and max 5 MB.",
+        "PAN document must be JPEG or PDF and max 200 KB.",
         validateFile
     ),
 
     aadhaar_document: Yup.mixed().test(
         "aadhaar-document",
-        "Aadhaar document must be PDF, JPG or PNG and max 5 MB.",
+        "Aadhaar document must be JPEG or PDF and max 200 KB.",
         validateFile
     ),
 
     gst_document: Yup.mixed().test(
         "gst-document",
-        "GST document must be PDF, JPG or PNG and max 5 MB.",
+        "GST document must be JPEG or PDF and max 200 KB.",
         validateFile
     )
 });
@@ -277,7 +276,7 @@ const PartnerKyc = () => {
     }, []);
 
     const openEditModal = () => {
-        if (isVerified) return;
+        if (submitting) return;
 
         setSuccess("");
         setError("");
@@ -329,40 +328,6 @@ const PartnerKyc = () => {
         <Layout activePath="/partner/kyc">
             <div className="w-full">
               <div className="mx-auto w-full max-w-[1600px] space-y-4">
-                    <div className="mb-6">
-                        <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
-                            <div>
-                                <div className="flex items-center gap-2 text-xs font-medium text-slate-400">
-                                    <span>Partners</span>
-                                    <span>/</span>
-                                    <span className="text-slate-600">
-                                        KYC Verification
-                                    </span>
-                                </div>
-
-                                <h3 className="text-[20px] font-extrabold tracking-tight text-[#092B31]">
-                                    Partner KYC
-                                </h3>
-
-                                 <p className="mt-1 text-[11px] text-slate-500">
-                                    Manage your KYC information and verification documents.
-                                </p>
-                            </div>
-
-                            {kyc && (
-                                <div className="rounded-xl border border-slate-200 bg-white px-5 py-3 shadow-sm">
-                                    <p className="text-xs text-slate-400">
-                                        KYC ID
-                                    </p>
-
-                                    <p className="mt-0.5 font-mono text-sm font-bold text-slate-800">
-                                        #{kyc.kyc_id}
-                                    </p>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
                     <AlertMessage
                         type="success"
                         message={success}
@@ -405,13 +370,6 @@ const PartnerKyc = () => {
 
                     {hasKyc && (
                         <>
-                            <div className="mb-6">
-                                <KycStatusCard
-                                    status={kyc.kyc_status}
-                                    rejectionReason={kyc.rejection_reason}
-                                />
-                            </div>
-
                             <KycDetails
                                 kyc={kyc}
                                 isVerified={isVerified}

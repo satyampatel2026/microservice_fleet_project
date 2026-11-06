@@ -1,6 +1,6 @@
 
-import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useEffect, useState, useRef } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   Bell,
   Menu,
@@ -13,6 +13,8 @@ import {
   X,
 } from "lucide-react";
 
+import { logoutClient } from "../../services/clientService";
+
 const pageTitles = {
   dashboard: "Overview",
   services: "Explore Services",
@@ -21,8 +23,31 @@ const pageTitles = {
   settings: "Settings",
 };
 
-export default function ClientTopbar({ setMobileOpen }) {
+export default function ClientTopbar({ setMobileOpen, client }) {
   const location = useLocation();
+  const navigate = useNavigate();
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [logoutError, setLogoutError] = useState("");
+  const logoutLock = useRef(false);
+
+  const handleLogout = async () => {
+    if (logoutLock.current) return;
+    logoutLock.current = true;
+    setLoggingOut(true);
+    setLogoutError("");
+
+    try {
+      // Backend client_token cookie clear karega.
+      await logoutClient();
+      setProfileOpen(false);
+      navigate("/", { replace: true });
+    } catch (error) {
+      setLogoutError(error.message);
+    } finally {
+      logoutLock.current = false;
+      setLoggingOut(false);
+    }
+  };
   const [profileOpen, setProfileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
 
@@ -98,13 +123,11 @@ export default function ClientTopbar({ setMobileOpen }) {
               aria-label="Open profile menu"
               className="flex items-center gap-3 rounded-xl p-1.5 transition hover:bg-white/5"
             >
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 text-sm font-semibold text-white">
-                C
-              </span>
+              <ClientAvatar client={client} />
 
               <span className="hidden text-left md:block">
                 <span className="block text-sm font-semibold text-white">
-                  Client
+                  {client?.name || "Client"}
                 </span>
                 <span className="block text-xs text-gray-500">
                   My Account
@@ -121,10 +144,10 @@ export default function ClientTopbar({ setMobileOpen }) {
               <div className="absolute right-0 top-14 z-50 w-56 overflow-hidden rounded-2xl border border-white/10 bg-[#171b29] p-2 shadow-2xl shadow-black/40">
                 <div className="border-b border-white/10 px-3 py-3">
                   <p className="text-sm font-semibold text-white">
-                    Client Account
+                    {client?.name || "Client Account"}
                   </p>
                   <p className="mt-1 text-xs text-gray-500">
-                    Demo profile
+                    Client workspace
                   </p>
                 </div>
 
@@ -154,6 +177,21 @@ export default function ClientTopbar({ setMobileOpen }) {
                   <LogOut size={17} />
                   Back to Website
                 </Link>
+
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  disabled={loggingOut}
+                  className="mt-1 flex w-full items-center gap-3 rounded-xl border-t border-white/10 px-3 py-3 text-left text-sm text-red-300 transition hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <LogOut size={17} />
+                  {loggingOut ? "Logging out..." : "Logout"}
+                </button>
+                {logoutError && (
+                  <p role="alert" className="px-3 py-2 text-xs text-red-300">
+                    {logoutError}
+                  </p>
+                )}
               </div>
             )}
           </div>
@@ -167,4 +205,11 @@ export default function ClientTopbar({ setMobileOpen }) {
       )}
     </header>
   );
+}
+
+function ClientAvatar({ client }) {
+  const [failed, setFailed] = useState(false);
+  useEffect(() => { setFailed(false); }, [client?.photo_url]);
+  const initials = (client?.name || "Client").trim().split(/\s+/).slice(0, 2).map((word) => word[0]).join("").toUpperCase();
+  return <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-violet-600 text-xs font-semibold text-white">{client?.photo_url && !failed ? <img src={client.photo_url} onError={() => setFailed(true)} alt="" className="h-full w-full object-cover" /> : initials}</span>;
 }

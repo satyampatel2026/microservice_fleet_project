@@ -1,6 +1,7 @@
 const path = require("path");
 const fs = require("fs");
 const connection = require("../model/db");
+const { cloudinary } = require("../config/cloudinary");
 
 const documentColumns = {
   pan: "pan_document",
@@ -21,7 +22,7 @@ const getPartnerDocument = async (req, res) => {
     }
 
     const [rows] = await connection.query(
-      `SELECT ${column} AS documentPath
+      `SELECT ${column} AS documentPath, cloud_documents
        FROM partner_kyc
        WHERE partner_id = ?`,
       [partnerId]
@@ -34,35 +35,8 @@ const getPartnerDocument = async (req, res) => {
       });
     }
 
-    const relativePath = rows[0].documentPath;
+    return sendDocument(rows[0], column, res);
 
-    const uploadRoot = path.resolve(__dirname, "../../myfiles");
-    const filePath = path.resolve(
-      uploadRoot,
-      relativePath.replace(/^\/myfiles\//, "")
-    );
-
-    if (
-      !relativePath.startsWith("/myfiles/") ||
-      !filePath.startsWith(uploadRoot + path.sep)
-    ) {
-      return res.status(403).json({
-        success: false,
-        message: "Invalid document path",
-      });
-    }
-
-    if (!fs.existsSync(filePath)) {
-      return res.status(404).json({
-        success: false,
-        message: "Document file not found",
-      });
-    }
-
-    res.setHeader("Cache-Control", "private, no-store");
-    res.setHeader("X-Content-Type-Options", "nosniff");
-
-    return res.sendFile(filePath);
   } catch (error) {
     console.error("KYC Document Error:", error);
 
@@ -120,7 +94,7 @@ const getAdminDocument = async (req, res) => {
     }
 
     const [rows] = await connection.query(
-      `SELECT ${column} AS documentPath
+      `SELECT ${column} AS documentPath, cloud_documents
        FROM partner_kyc
        WHERE kyc_id = ?`,
       [kycId]
@@ -133,39 +107,8 @@ const getAdminDocument = async (req, res) => {
       });
     }
 
-    const relativePath = rows[0].documentPath;
-    const uploadRoot = path.resolve(__dirname, "../../myfiles");
+    return sendDocument(rows[0], column, res);
 
-    if (!relativePath.startsWith("/myfiles/")) {
-      return res.status(403).json({
-        success: false,
-        message: "Invalid document path",
-      });
-    }
-
-    const filePath = path.resolve(
-      uploadRoot,
-      relativePath.slice("/myfiles/".length)
-    );
-
-    if (!filePath.startsWith(uploadRoot + path.sep)) {
-      return res.status(403).json({
-        success: false,
-        message: "Invalid document path",
-      });
-    }
-
-    if (!fs.existsSync(filePath)) {
-      return res.status(404).json({
-        success: false,
-        message: "Document file not found",
-      });
-    }
-
-    res.setHeader("Cache-Control", "private, no-store");
-    res.setHeader("X-Content-Type-Options", "nosniff");
-
-    return res.sendFile(filePath);
   } catch (error) {
     console.error("Admin KYC Document Error:", error);
 
@@ -174,6 +117,42 @@ const getAdminDocument = async (req, res) => {
       message: "Document authorization unavailable",
     });
   }
+};
+
+
+// Dono existing document APIs isi function se file dikhayengi.
+const sendDocument = (row, column, res) => {
+  res.setHeader("Cache-Control", "private, no-store");
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("Referrer-Policy", "no-referrer");
+  const documents = typeof row.cloud_documents === "string" ? JSON.parse(row.cloud_documents) : (row.cloud_documents || {});
+  const document = documents[column];
+
+  if (document) {
+    // Login/permission check ke baad 60 second ka temporary link.
+    const url = cloudinary.utils.private_download_url(document.public_id, document.format || "", {
+      resource_type: document.resource_type,
+      type: "authenticated",
+      expires_at: Math.floor(Date.now() / 1000) + 60,
+      attachment: false,
+    });
+    return res.redirect(302, url);
+  }
+
+  // Purani local files migration tak pehle ki tarah khulengi.
+  const relativePath = row.documentPath;
+  const uploadRoot = path.resolve(__dirname, "../../myfiles");
+  if (typeof relativePath !== "string" || !relativePath.startsWith("/myfiles/")) {
+    return res.status(404).json({ success: false, message: "Document is unavailable" });
+  }
+  const filePath = path.resolve(uploadRoot, relativePath.slice("/myfiles/".length));
+  if (!filePath.startsWith(uploadRoot + path.sep)) {
+    return res.status(403).json({ success: false, message: "Invalid document path" });
+  }
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).json({ success: false, message: "Document file not found" });
+  }
+  return res.sendFile(filePath);
 };
 
 module.exports = {

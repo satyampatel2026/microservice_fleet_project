@@ -1,7 +1,10 @@
+import { useEffect, useState } from "react";
 import BrandLogo from "../BrandLogo";
 import { Link, NavLink } from "react-router-dom";
 import {
   LayoutDashboard,
+  MapPinned,
+  Truck,
   Wrench,
   CalendarDays,
   UserRound,
@@ -19,6 +22,9 @@ const workspaceLinks = [
     path: "/client/dashboard",
     icon: LayoutDashboard,
   },
+  { label: "Vehicle Tracking", path: "/client/tracking", icon: MapPinned },
+  { label: "My Vehicles", path: "/client/vehicles", icon: Truck },
+  {label: "My Drivers", path: "/client/drivers", icon:UserRound},
   {
     label: "Explore Services",
     path: "/client/services",
@@ -45,6 +51,7 @@ const accountLinks = [
 ];
 
 export default function ClientSidebar({
+  client,
   mobileOpen,
   setMobileOpen,
   collapsed,
@@ -109,7 +116,7 @@ export default function ClientSidebar({
 
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-white/[0.08] bg-[#10131e] transition-all duration-300 ${
+        className={`fixed inset-y-0 left-0 z-50 flex h-[100dvh] max-h-[100dvh] w-64 flex-col overflow-hidden border-r border-white/[0.08] bg-[#10131e] transition-all duration-300 ${
           collapsed ? "lg:w-[84px]" : "lg:w-64"
         } ${
           mobileOpen ? "translate-x-0" : "-translate-x-full"
@@ -159,7 +166,7 @@ export default function ClientSidebar({
 </div>
 
         {/* Navigation */}
-        <div className="flex-1 overflow-y-auto px-3 py-7">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-7">
           <div>
             {(!collapsed || mobileOpen) && (
               <p className="mb-3 px-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-600">
@@ -189,49 +196,6 @@ export default function ClientSidebar({
 
         {/* Bottom */}
         <div className="shrink-0 space-y-3 border-t border-white/[0.08] p-3">
-          <Link
-            to="/"
-            onClick={closeMobile}
-            title="Visit Website"
-            className="flex items-center gap-3 rounded-xl px-3.5 py-3 text-sm text-gray-400 transition hover:bg-white/[0.06] hover:text-white"
-          >
-            <Globe2 size={20} className="shrink-0" />
-            {(!collapsed || mobileOpen) && (
-              <>
-                <span className="flex-1">Visit Website</span>
-                <ArrowUpRight size={16} />
-              </>
-            )}
-          </Link>
-
-          {/* User card */}
-          <Link
-            to="/client/profile"
-            onClick={closeMobile}
-            title="My Profile"
-            className={`flex items-center gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.04] p-3 transition hover:bg-white/[0.07] ${
-  collapsed ? "lg:justify-center lg:px-1" : ""
-}`}
-          >
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 text-sm font-bold text-white">
-              C
-            </span>
-
-            {(!collapsed || mobileOpen) && (
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-white">
-                  Client Account
-                </p>
-                <p className="mt-0.5 truncate text-xs text-gray-500">
-                  Demo workspace
-                </p>
-              </div>
-            )}
-
-            {(!collapsed || mobileOpen) && (
-              <ChevronRight size={17} className="text-gray-500" />
-            )}
-          </Link>
 
           {/* Collapse button */}
           <button
@@ -254,4 +218,11 @@ export default function ClientSidebar({
       </aside>
     </>
   );
+}
+
+function ClientAvatar({ client }) {
+  const [failed, setFailed] = useState(false);
+  useEffect(() => { setFailed(false); }, [client?.photo_url]);
+  const initials = (client?.name || "Client").trim().split(/\s+/).slice(0, 2).map((word) => word[0]).join("").toUpperCase();
+  return <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-violet-600 text-xs font-semibold text-white">{client?.photo_url && !failed ? <img src={client.photo_url} onError={() => setFailed(true)} alt="" className="h-full w-full object-cover" /> : initials}</span>;
 }

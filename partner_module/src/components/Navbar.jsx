@@ -1,8 +1,9 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { logoutPartner } from "../services/partnerService";
+import { logoutPartner, getPartnerProfile } from "../services/partnerService";
 import {
+  UserRound,
   Menu,
   Search,
   Bell,
@@ -39,6 +40,21 @@ const notifications = [
 
 const Navbar = ({ onMenuClick }) => {
   const navigate = useNavigate();
+  const [partner, setPartner] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    let profileChanged = false;
+    getPartnerProfile().then((result) => {
+      if (!cancelled && !profileChanged) setPartner(result.data);
+    }).catch((error) => console.error("Navbar profile:", error.message));
+    const updateProfile = (event) => { profileChanged = true; setPartner(event.detail); };
+    window.addEventListener("partner-profile-updated", updateProfile);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("partner-profile-updated", updateProfile);
+    };
+  }, []);
 
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -358,13 +374,11 @@ const Navbar = ({ onMenuClick }) => {
                   profileOpen ? "bg-[#F1F8F6]" : ""
                 }`}
               >
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] border border-teal-500/20 bg-gradient-to-br from-[#0E3940] to-[#0F766E] text-[10px] font-extrabold text-white shadow-[0_3px_9px_rgba(15,118,110,0.15)]">
-                  SM
-                </div>
+                <PartnerAvatar partner={partner} />
 
                 <div className="hidden max-w-[130px] text-left lg:block">
                   <p className="truncate text-[11px] font-bold leading-tight text-[#092B31]">
-                    Sharma Motors
+                    {partner?.partner_name || "Partner"}
                   </p>
 
                   <p className="mt-0.5 text-[10px] leading-tight text-slate-400">
@@ -385,13 +399,11 @@ const Navbar = ({ onMenuClick }) => {
                   {/* Profile Header */}
                   <div className="border-b border-slate-100 bg-[#F9FBFA] p-4">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#0E3940] to-[#0F766E] text-xs font-extrabold text-white">
-                        SM
-                      </div>
+                      <PartnerAvatar partner={partner} large />
 
                       <div className="min-w-0">
                         <p className="truncate text-[13px] font-bold text-[#092B31]">
-                          Sharma Motors
+                          {partner?.partner_name || "Partner"}
                         </p>
 
                         <p className="mt-0.5 text-[11px] text-slate-500">
@@ -406,6 +418,9 @@ const Navbar = ({ onMenuClick }) => {
                     </div>
                   </div>
 
+                  <div className="px-2 pt-2">
+                    <button type="button" onClick={() => { setProfileOpen(false); navigate("/partner/profile"); }} className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-xs font-semibold text-slate-600 hover:bg-teal-50 hover:text-teal-700"><UserRound size={16} />My Profile</button>
+                  </div>
                   {/* Logout */}
                   <div className="p-2">
                     <button
@@ -438,3 +453,12 @@ const Navbar = ({ onMenuClick }) => {
 };
 
 export default Navbar;
+
+function PartnerAvatar({ partner, large = false }) {
+  const [failed, setFailed] = useState(false);
+  useEffect(() => { setFailed(false); }, [partner?.photo_url]);
+  const initials = (partner?.partner_name || "Partner").trim().split(/\s+/).slice(0, 2).map((word) => word[0]).join("").toUpperCase();
+  return <span className={`flex shrink-0 items-center justify-center overflow-hidden rounded-xl bg-teal-700 text-[11px] font-bold text-white ${large ? "h-10 w-10" : "h-8 w-8"}`}>
+    {partner?.photo_url && !failed ? <img src={partner.photo_url} alt="" onError={() => setFailed(true)} className="h-full w-full object-cover" /> : initials}
+  </span>;
+}

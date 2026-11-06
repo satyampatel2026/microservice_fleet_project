@@ -133,3 +133,16 @@ export async function updateMyServices(serviceIds) {
     }
   );
 }
+// Profile: FormData ke saath Content-Type manually mat lagana.
+export async function getPartnerProfile() {
+  return request(`${AUTH_URL}/profile`);
+}
+
+export async function updatePartnerProfile(formData) {
+  return request(`${AUTH_URL}/profile`, { method: "PUT", body: formData });
+}
+
+// Sirf photo upload; profile details save karne ka button alag hai.
+export async function uploadPartnerPhoto(formData) {
+  return request(`${AUTH_URL}/profile/photo`, { method: "POST", body: formData });
+}

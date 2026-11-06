@@ -1,37 +1,113 @@
+import { showToast, validateField, focusFirstError } from "../utils/authFeedback";
 import { useState, useRef } from "react";
 import TurnstileCaptcha from "../components/TurnstileCaptcha"; 
+import { forgotClientPassword, verifyClientOtp, resetClientPassword } from "../services/clientService";
 import { Link } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Mail } from "lucide-react";
 import { motion } from "motion/react";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
-  const [submitted, setSubmitted] = useState(false);
+  const [step, setStep] = useState("email");
+  const [otp, setOtp] = useState("");
+  const [resetToken, setResetToken] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [message, setMessage] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [captchaKey, setCaptchaKey] = useState(0);
+  const lock = useRef(false);
   const [captchaToken, setCaptchaToken] = useState("");
 const captchaRef = useRef(null);
 const [error, setError] = useState("");
 
-  const handleSubmit = (e) => {
-  e.preventDefault();
+  const [fieldErrors, setFieldErrors] = useState({});
 
-  if (!email.trim()) {
-    setError("Please enter your email address.");
-    return;
+  function checkField(field) {
+    const values = { email, otp, newPassword, confirmPassword };
+    setFieldErrors((previous) => ({ ...previous, [field]: validateField(field, values[field], newPassword) }));
   }
 
-  if (!captchaToken) {
-    setError("Please complete CAPTCHA verification.");
-    return;
+  function changeField(field, value) {
+    if (field === "email") setEmail(value);
+    if (field === "otp") setOtp(value.replace(/[^0-9]/g, "").slice(0, 6));
+    if (field === "newPassword") setNewPassword(value);
+    if (field === "confirmPassword") setConfirmPassword(value);
+    setError("");
+    setFieldErrors((previous) => {
+      const nextErrors = { ...previous };
+      if (previous[field]) nextErrors[field] = validateField(field, value, newPassword);
+      if (field === "newPassword" && confirmPassword) nextErrors.confirmPassword = validateField("confirmPassword", confirmPassword, value);
+      return nextErrors;
+    });
   }
 
-  setError("");
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (lock.current) return;
+    let errors = {};
+    if (step === "email") errors.email = validateField("email", email);
+    if (step === "otp") errors.otp = validateField("otp", otp);
+    if (step === "password") {
+      errors.newPassword = validateField("newPassword", newPassword);
+      errors.confirmPassword = validateField("confirmPassword", confirmPassword, newPassword);
+    }
+    setFieldErrors(errors);
+    if (focusFirstError(errors)) return;
+    if (step === "email" && !captchaToken) { setError("Please complete CAPTCHA verification."); return; }
+    lock.current = true;
+    setBusy(true);
+    setError("");
+    try {
+      if (step === "email") {
+        const result = await forgotClientPassword({ email: email.trim().toLowerCase(), captchaToken });
+        setFieldErrors({});
+        showToast("success", "Request received. Check your email if an active account exists.");
+        setMessage(result.message);
+        setStep("otp");
+      } else if (step === "otp") {
+        const result = await verifyClientOtp({ email: email.trim().toLowerCase(), otp });
+        if (!result.resetToken) throw new Error("Reset token missing. Request a new OTP.");
+        setFieldErrors({});
+        showToast("success", "OTP verified. Set your new password.");
+        setResetToken(result.resetToken);
+        setOtp("");
+        setMessage("OTP verified. Choose a new password.");
+        setStep("password");
+      } else if (step === "password") {
+        await resetClientPassword({ resetToken, newPassword });
+        setResetToken(""); setNewPassword(""); setConfirmPassword("");
+        setFieldErrors({});
+        showToast("success", "Password updated successfully.");
+        setMessage("Password reset successfully. Please sign in.");
+        setStep("done");
+      }
+    } catch (error) {
+      setError(error.message);
+      showToast("error", error.message);
+    } finally {
+      lock.current = false;
+      setBusy(false);
+      if (step === "email") { setCaptchaToken(""); setCaptchaKey((value) => value + 1); }
+    }
+  };
 
-  // Backend API integration pending.
-  // Abhi koi OTP ya password reset email nahi bheja ja raha.
-  setSubmitted(true);
-};
+  const startAgain = () => {
+    setFieldErrors({});
+    setStep("email"); setOtp(""); setResetToken("");
+    setNewPassword(""); setConfirmPassword(""); setError(""); setMessage("");
+    setCaptchaToken(""); setCaptchaKey((value) => value + 1);
+  };
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#090b12] px-5 py-16 text-white">
+
+      <style>{`
+        input[aria-invalid="true"] { border-color: #fb7185; }
+        input[aria-invalid="true"]:focus { box-shadow: 0 0 0 3px rgba(251,113,133,.12); }
+        .client-auth-toast.swal2-popup { border: 1px solid rgba(167,139,250,.22); border-radius: 14px; box-shadow: 0 16px 48px rgba(0,0,0,.3); font-family: inherit; font-size: 13px; }
+        .client-auth-toast .swal2-timer-progress-bar { background: #a78bfa; }
+        @media (prefers-reduced-motion: reduce) { .client-auth-toast { animation: none !important; } }
+      `}</style>
       <div className="pointer-events-none absolute left-1/2 top-1/4 h-96 w-96 -translate-x-1/2 rounded-full bg-violet-600/20 blur-[110px]" />
 
       <motion.div
@@ -54,87 +130,35 @@ const [error, setError] = useState("");
             </div>
 
             <h1 className="text-3xl font-semibold">
-              Forgot your password?
+              {step === "email" ? "Forgot your password?" : step === "otp" ? "Verify your email" : step === "password" ? "Set a new password" : "Password updated"}
             </h1>
 
             <p className="mt-4 text-sm leading-7 text-gray-400">
-              Enter your registered email address to request a
-              password reset.
+              {step === "email" ? "Enter your registered email to request a reset OTP." : step === "otp" ? "Enter the 6-digit code sent to your email. It expires in 10 minutes." : step === "password" ? "Choose a new password with at least 8 characters." : "Your password has been changed. Sign in to continue."}
             </p>
           </div>
 
-          {submitted ? (
-            <div className="space-y-5 text-center">
-              <div
-                role="status"
-                className="rounded-xl border border-violet-400/20 bg-violet-500/10 p-4 text-sm leading-6 text-violet-200"
-              >
-                Your email address has been captured in this demo.
-                Password reset emails will work after backend
-                integration.
-              </div>
-
-              <button
-                type="button"
-                onClick={() => {setSubmitted(false); setCaptchaToken(""); setError("");}}
-                className="text-sm font-medium text-violet-400 hover:text-violet-300"
-              >
-                Try another email
-              </button>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label
-                  htmlFor="email"
-                  className="mb-2 block text-sm text-gray-300"
-                >
-                  Email Address
-                </label>
-
-                <input
-                  id="email"
-                  type="email"
-                  required
-                  autoComplete="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your registered email"
-                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3.5 text-sm text-white outline-none transition placeholder:text-gray-600 focus:border-violet-400"
-                />
-              </div>
-            {/* CAPTCHA Verification */}
-<div className="flex flex-col items-center gap-3 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-5">
-  <TurnstileCaptcha
-    ref={captchaRef}
-    onVerify={(token) => {
-      setCaptchaToken(token);
-      setError("");
-    }}
-  />
-
-  <p className="text-center text-xs text-gray-400">
-    Complete security verification to request a password reset.
-  </p>
-</div>
-
-{/* Error */}
-{error && (
-  <p
-    role="alert"
-    className="rounded-xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm text-red-300"
-  >
-    {error}
-  </p>
-)}
-              <button
-                type="submit"
-                disabled={!captchaToken}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-violet-500 px-5 py-4 font-semibold transition hover:bg-violet-400 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                Request Password Reset
-                <ArrowRight size={18} />
-              </button>
+          {message && <p role="status" className="mb-5 rounded-xl border border-violet-400/20 bg-violet-500/10 p-4 text-sm leading-6 text-violet-200">{message}</p>}
+          {step !== "done" && (
+            <form noValidate onSubmit={handleSubmit} className="space-y-5">
+              <fieldset disabled={busy} className="space-y-5">
+                {step === "email" && <>
+                  <div><label htmlFor="email" className="mb-2 block text-sm text-gray-300">Email address</label><input id="email" type="email" required maxLength={100} autoComplete="email" value={email} onChange={(event) => changeField("email", event.target.value)} placeholder="Enter registered email" className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3.5 text-sm outline-none focus:border-violet-400"  onBlur={() => checkField("email")} aria-invalid={!!fieldErrors.email} aria-describedby={fieldErrors.email ? "email-error" : undefined} disabled={busy} />
+              {fieldErrors.email && <p id="email-error" role="alert" className="mt-1.5 text-xs leading-5 text-rose-300">{fieldErrors.email}</p>}</div>
+                  <div className="flex justify-center rounded-xl border border-white/10 p-4"><TurnstileCaptcha key={captchaKey} ref={captchaRef} onVerify={(token) => { setCaptchaToken(token); }} /></div>
+                </>}
+                {step === "otp" && <div><label htmlFor="otp" className="mb-2 block text-sm text-gray-300">6-digit OTP</label><input id="otp" type="text" inputMode="numeric" autoComplete="one-time-code" required pattern="[0-9]{6}" maxLength={6} value={otp} onChange={(event) => changeField("otp", event.target.value)} className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3.5 text-sm tracking-widest outline-none focus:border-violet-400"  onBlur={() => checkField("otp")} aria-invalid={!!fieldErrors.otp} aria-describedby={fieldErrors.otp ? "otp-error" : undefined} disabled={busy} />
+              {fieldErrors.otp && <p id="otp-error" role="alert" className="mt-1.5 text-xs leading-5 text-rose-300">{fieldErrors.otp}</p>}</div>}
+                {step === "password" && <>
+                  <div><label htmlFor="newPassword" className="mb-2 block text-sm text-gray-300">New password</label><input id="newPassword" type="password" required minLength={8} autoComplete="new-password" value={newPassword} onChange={(event) => changeField("newPassword", event.target.value)} className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3.5 text-sm outline-none focus:border-violet-400"  onBlur={() => checkField("newPassword")} aria-invalid={!!fieldErrors.newPassword} aria-describedby={fieldErrors.newPassword ? "newPassword-error" : undefined} disabled={busy} />
+              {fieldErrors.newPassword && <p id="newPassword-error" role="alert" className="mt-1.5 text-xs leading-5 text-rose-300">{fieldErrors.newPassword}</p>}</div>
+                  <div><label htmlFor="confirmPassword" className="mb-2 block text-sm text-gray-300">Confirm password</label><input id="confirmPassword" type="password" required autoComplete="new-password" value={confirmPassword} onChange={(event) => changeField("confirmPassword", event.target.value)} className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3.5 text-sm outline-none focus:border-violet-400"  onBlur={() => checkField("confirmPassword")} aria-invalid={!!fieldErrors.confirmPassword} aria-describedby={fieldErrors.confirmPassword ? "confirmPassword-error" : undefined} disabled={busy} />
+              {fieldErrors.confirmPassword && <p id="confirmPassword-error" role="alert" className="mt-1.5 text-xs leading-5 text-rose-300">{fieldErrors.confirmPassword}</p>}</div>
+                </>}
+              </fieldset>
+              {error && <p role="alert" className="rounded-xl bg-red-500/10 p-3 text-sm text-red-300">{error}</p>}
+              <button type="submit" disabled={busy} className="flex w-full items-center justify-center gap-2 rounded-xl bg-violet-500 px-5 py-4 font-semibold hover:bg-violet-400 disabled:cursor-not-allowed disabled:opacity-50">{busy ? "Please wait..." : step === "email" ? "Send OTP" : step === "otp" ? "Verify OTP" : "Reset password"}<ArrowRight size={18} /></button>
+              {step !== "email" && <button type="button" disabled={busy} onClick={startAgain} className="text-sm text-violet-300 disabled:opacity-50">Request a new OTP / change email</button>}
             </form>
           )}
 

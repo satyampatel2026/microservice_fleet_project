@@ -65,7 +65,7 @@ const menuItems = [
     enabled: false,
   },
   {
-    label: "Profile",
+    label: "Business Details",
     icon: BarChart3,
     href: "/partner/kyc",
     enabled: true,
@@ -136,9 +136,8 @@ const Sidebar = ({ open, onClose, activePath = "/" }) => {
 
       {/* SIDEBAR */}
       <aside
-        className={`fixed left-0 top-0 z-50 flex h-screen w-[272px] shrink-0 flex-col overflow-hidden border-r border-white/[0.07] bg-[#071B22] text-slate-300 shadow-[12px_0_35px_rgba(7,27,34,0.12)] transition-transform duration-300 ease-out lg:sticky lg:z-0 lg:translate-x-0 lg:shadow-none ${
-          open ? "translate-x-0" : "-translate-x-full"
-        }`}
+        className={`fixed left-0 top-0 z-50 flex h-screen w-[272px] shrink-0 flex-col overflow-hidden border-r border-white/[0.07] bg-[#071B22] text-slate-300 shadow-[12px_0_35px_rgba(7,27,34,0.12)] transition-transform duration-300 ease-out ${open ? "translate-x-0" : "-translate-x-full"} 
+        lg:translate-x-0 lg:shadow-none`}
       >
         {/* Decorative background */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -235,33 +234,7 @@ const Sidebar = ({ open, onClose, activePath = "/" }) => {
           })}
         </nav>
 
-        {/* BOTTOM ACCOUNT */}
         <div className="relative z-10 shrink-0 border-t border-white/[0.08] bg-[#081F27]/90 p-3">
-          <div className="mb-2 flex items-center gap-3 rounded-xl px-2 py-2">
-            <div className="relative shrink-0">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#0E5957] to-[#0F766E] text-[11px] font-bold text-white">
-                SM
-              </div>
-
-              <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-[#081F27] bg-emerald-400" />
-            </div>
-
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-[12px] font-bold text-white">
-                Sharma Motors
-              </p>
-
-              <p className="mt-0.5 truncate text-[10px] text-slate-500">
-                Partner Account
-              </p>
-            </div>
-
-            <ShieldCheck
-              size={16}
-              className="shrink-0 text-teal-400"
-            />
-          </div>
-
           {/* LOGOUT BUTTON */}
           <button
             type="button"

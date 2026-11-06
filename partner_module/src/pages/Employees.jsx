@@ -174,24 +174,27 @@ export default function Employees() {
             <h3 className="text-xl font-bold tracking-tight text-[#092B31]">Employees</h3>
             <p className="mt-1 text-xs text-slate-500">Your team, their details and roles in one place.</p>
           </div>
-          <button type="button" onClick={() => openForm()} disabled={saving || statusBusy !== null}
-            className={`${buttonClass} ml-auto bg-[#0f766e] text-white shadow-sm hover:bg-teal-800`}>
-            <Plus size={15} /> Add employee
-          </button>
-        </header>
-
-        <div className="grid grid-cols-3 gap-2 sm:gap-3">
+          <div className="ml-auto flex flex-wrap items-center gap-2">
+          <div className="grid grid-cols-3 gap-1.5">
           {[
             { title: "Total team", count: employees.length, dot: "bg-slate-500" },
             { title: "Active", count: activeCount, dot: "bg-teal-500" },
             { title: "Inactive", count: employees.length - activeCount, dot: "bg-amber-400" },
           ].map((stat) => (
-            <div key={stat.title} className="rounded-xl border border-[#E4ECEA] bg-white px-3 py-3 sm:px-4">
-              <p className="flex items-center gap-1.5 text-[11px] text-slate-500"><span className={`h-1.5 w-1.5 rounded-full ${stat.dot}`} />{stat.title}</p>
-              <p className="mt-1.5 text-xl font-semibold tracking-tight text-[#092B31]">{loading && employees.length === 0 ? "—" : stat.count}</p>
+            <div key={stat.title} className="min-w-[74px] rounded-lg border border-[#E4ECEA] bg-white px-2.5 py-1.5">
+              <p className="flex items-center gap-1.5 whitespace-nowrap text-[10px] text-slate-500"><span className={`h-1.5 w-1.5 rounded-full ${stat.dot}`} />{stat.title}</p>
+              <p className="mt-0.5 text-sm font-semibold tracking-tight text-[#092B31]">{loading && employees.length === 0 ? "—" : stat.count}</p>
             </div>
           ))}
         </div>
+          <button type="button" onClick={() => openForm()} disabled={saving || statusBusy !== null}
+            className={`${buttonClass} bg-[#0f766e] text-white shadow-sm hover:bg-teal-800`}>
+            <Plus size={15} /> Add employee
+          </button>
+          </div>
+        </header>
+
+
 
         <section className="overflow-hidden rounded-xl border border-[#E4ECEA] bg-white shadow-[0_3px_18px_rgba(9,43,49,0.025)]">
           <div className="flex flex-wrap items-center gap-2 border-b border-slate-100 p-3">

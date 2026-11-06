@@ -13,7 +13,7 @@ const getCategories = async (req, res) => {
          created_at,
          updated_at
        FROM service_categories
-       ORDER BY category_name ASC`
+       ORDER BY category_name ASC`,
     );
 
     return res.status(200).json({
@@ -61,10 +61,7 @@ const addCategory = async (req, res) => {
       `INSERT INTO service_categories
          (category_name, description)
        VALUES (?, ?)`,
-      [
-        category_name.trim(),
-        description?.trim() || null,
-      ]
+      [category_name.trim(), description?.trim() || null],
     );
 
     return res.status(201).json({
@@ -139,12 +136,7 @@ const updateCategory = async (req, res) => {
            description = ?,
            status = ?
        WHERE category_id = ?`,
-      [
-        category_name.trim(),
-        description?.trim() || null,
-        status,
-        categoryId,
-      ]
+      [category_name.trim(), description?.trim() || null, status, categoryId],
     );
 
     if (result.affectedRows === 0) {
@@ -218,7 +210,6 @@ const getPublicServiceCatalog = async (req, res) => {
       success: true,
       data: Array.from(categoryMap.values()),
     });
-
   } catch (error) {
     console.error("Public Service Catalog Error:", error);
 
@@ -231,5 +222,7 @@ const getPublicServiceCatalog = async (req, res) => {
 
 module.exports = {
   getCategories,
-  addCategory,updateCategory,getPublicServiceCatalog
+  addCategory,
+  updateCategory,
+  getPublicServiceCatalog,
 };

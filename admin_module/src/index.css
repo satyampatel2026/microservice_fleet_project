@@ -1,5 +1,169 @@
 @import "tailwindcss";
 
-nav a {
-  text-decoration: none;
+/* Navbar ke selection se dark: utilities chalengi, system setting se nahi. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --admin-sidebar: #EDEAF4;
+  --admin-chrome: #EDEAF4;
+  --admin-menu-text: #514D5C;
+  --admin-menu-icon: #777184;
+  --admin-menu-hover: #E4DFEE;
+  --admin-selected-text: #51347F;
+  --admin-selected-icon: #6945A2;
+  --admin-sidebar-border: #DDD8E8;
+  --admin-logo-text: #302744;
+  --admin-background: #F8FAFC;
+  --admin-card: #FFFFFF;
+  --admin-primary: #4338CA;
+  --admin-active: #DCD4EE;
+  --admin-text: #172033;
+  --admin-muted: #64748B;
+  --admin-border: #E5E7EB;
+  --admin-soft: #F8FAFC;
+  --admin-primary-soft: #EEF2FF;
+  color-scheme: light;
+}
+html.dark {
+  --admin-sidebar: #111827;
+  --admin-chrome: #1F2937;
+  --admin-menu-text: #9CA3AF;
+  --admin-menu-icon: #9CA3AF;
+  --admin-menu-hover: #293451;
+  --admin-selected-text: #FFFFFF;
+  --admin-selected-icon: #FFFFFF;
+  --admin-sidebar-border: #374151;
+  --admin-logo-text: #F9FAFB;
+  --admin-background: #0B1120;
+  --admin-card: #1F2937;
+  --admin-primary: #818CF8;
+  --admin-active: #4338CA;
+  --admin-text: #F9FAFB;
+  --admin-muted: #9CA3AF;
+  --admin-border: #374151;
+  --admin-soft: #263244;
+  --admin-primary-soft: #293451;
+  color-scheme: dark;
+}
+
+nav a { text-decoration: none; }
+.admin-theme { background-color: var(--admin-background); color: var(--admin-text); }
+.admin-theme .theme-sidebar { background: var(--admin-sidebar) !important; color: var(--admin-text) !important; }
+.admin-theme .theme-navbar,
+.admin-theme .theme-footer { background: var(--admin-card) !important; color: var(--admin-text); border-color: var(--admin-border) !important; }
+.admin-theme .theme-nav-link { color: var(--admin-menu-text) !important; }
+.admin-theme .theme-nav-link:hover { background: var(--admin-menu-hover) !important; color: var(--admin-menu-text) !important; }
+.admin-theme .theme-nav-active,
+.admin-theme .theme-nav-active:hover { background: var(--admin-active) !important; color: var(--admin-selected-text) !important; }
+.admin-theme .theme-nav-active svg { color: var(--admin-selected-icon) !important; }
+.admin-theme .theme-nav-dot { background: currentColor !important; }
+.admin-theme .theme-mode-active { background: var(--admin-primary-soft); color: var(--admin-primary); }
+
+/* Existing pages ke neutral surfaces/text ko central palette se jodo.
+   Green/red/amber status colours ko change nahi karte. */
+.admin-theme :is([class~="bg-white"], [class~="bg-white/95"], [class~="bg-white/90"], [class~="bg-white/80"]) {
+  background-color: var(--admin-card) !important;
+}
+.admin-theme :is([class~="bg-slate-50"], [class~="bg-slate-50/80"], [class~="bg-slate-100"], [class~="bg-slate-100/80"]) {
+  background-color: var(--admin-soft) !important;
+}
+.admin-theme :is([class~="text-slate-900"], [class~="text-slate-800"], [class~="text-slate-700"], [class~="text-gray-900"], [class~="text-gray-800"], [class~="text-gray-700"], [class~="text-[#092B31]"]) {
+  color: var(--admin-text) !important;
+}
+.admin-theme :is([class~="text-slate-600"], [class~="text-slate-500"], [class~="text-slate-400"], [class~="text-gray-600"], [class~="text-gray-500"], [class~="text-gray-400"]) {
+  color: var(--admin-muted) !important;
+}
+.admin-theme :is([class*="border-slate-"], [class*="border-gray-"], [class*="border-white/"], [class*="divide-slate-"] > :not(:last-child)) {
+  border-color: var(--admin-border) !important;
+}
+.admin-theme :is([class~="text-violet-600"], [class~="text-violet-700"], [class~="text-indigo-600"], [class~="text-violet-300"], [class~="text-violet-400"]) {
+  color: var(--admin-primary) !important;
+}
+.admin-theme :is([class~="bg-violet-600"], [class~="bg-indigo-600"], [class~="bg-violet-500"]) {
+  background-color: var(--admin-primary) !important;
+  color: #FFFFFF !important;
+}
+html.dark .admin-theme :is([class~="bg-violet-600"], [class~="bg-indigo-600"], [class~="bg-violet-500"]) {
+  color: #172033 !important;
+}
+.admin-theme :is([class~="bg-violet-50"], [class~="bg-indigo-50"], [class~="bg-violet-100"]) {
+  background-color: var(--admin-primary-soft) !important;
+}
+.admin-theme :is(input, textarea, select):focus-visible {
+  border-color: var(--admin-primary) !important;
+  outline-color: var(--admin-primary);
+}
+
+html.dark .admin-theme :is([class~="dark:bg-[#090b12]"], [class~="dark:bg-[#10131e]/90"], [class~="dark:bg-[#10131e]/95"], [class~="dark:bg-[#141824]"], [class~="dark:bg-[#171b2a]"], [class~="dark:bg-[#191e2d]"], [class~="dark:bg-[#242a3b]"]) { background-color: var(--admin-card) !important; }
+
+/* Main background must stay distinct from cards. */
+.admin-theme.theme-workspace { background: var(--admin-background) !important; }
+.admin-theme dialog { background: var(--admin-card); color: var(--admin-text); border-color: var(--admin-border); }
+
+/* Sidebar-specific palette, including icon colours. */
+.admin-theme .theme-sidebar .theme-nav-link svg { color: var(--admin-menu-icon) !important; }
+.admin-theme .theme-sidebar .theme-nav-active svg { color: var(--admin-selected-icon) !important; }
+.admin-theme aside.theme-sidebar,
+.admin-theme aside.theme-sidebar [class*="border-"] { border-color: var(--admin-sidebar-border) !important; }
+.admin-theme .theme-sidebar .theme-logo-text { color: var(--admin-logo-text) !important; }
+
+/* Matching navbar/footer in light mode; original dark palette is preserved. */
+.admin-theme header.theme-navbar,
+.admin-theme footer.theme-footer,
+html.dark .admin-theme header.theme-navbar,
+html.dark .admin-theme footer.theme-footer {
+  background: var(--admin-chrome) !important;
+  border-color: var(--admin-sidebar-border) !important;
+}
+
+/* Partner table: light hover must not turn rows white in dark mode. */
+html.dark .admin-theme .partner-management tbody tr:hover {
+  background-color: var(--admin-soft) !important;
+}
+html.dark .admin-theme .partner-management .partner-table-action {
+  color: var(--admin-text) !important;
+  background-color: var(--admin-card) !important;
+  border-color: var(--admin-border) !important;
+}
+html.dark .admin-theme .partner-management .partner-table-action:not(:disabled):hover {
+  color: var(--admin-text) !important;
+  background-color: var(--admin-primary-soft) !important;
+  border-color: var(--admin-primary) !important;
+}
+html.dark .admin-theme .partner-management select,
+html.dark .admin-theme .partner-management select option {
+  color: var(--admin-text);
+  background-color: var(--admin-card);
+}
+
+/* Partner services / KYC / rejection dialogs: all neutral surfaces follow theme. */
+.admin-theme .partner-modal-panel {
+  color: var(--admin-text) !important;
+  background-color: var(--admin-card) !important;
+  border-color: var(--admin-border) !important;
+}
+.admin-theme .partner-modal-panel :is([class*="bg-slate-50"], [class*="bg-slate-100"], [class*="bg-gray-50"], [class*="bg-gray-100"], [class*="bg-gray-200"]) {
+  background-color: var(--admin-soft) !important;
+}
+.admin-theme .partner-modal-panel :is([class*="border-slate-"], [class*="border-gray-"]) {
+  border-color: var(--admin-border) !important;
+}
+.admin-theme .partner-modal-panel :is(textarea, input, select) {
+  color: var(--admin-text) !important;
+  background-color: var(--admin-soft) !important;
+  border-color: var(--admin-border) !important;
+}
+.admin-theme .partner-modal-panel :is(textarea, input)::placeholder {
+  color: var(--admin-muted);
+  opacity: 1;
+}
+.admin-theme .partner-modal-panel :is([class*="hover:bg-slate-"], [class*="hover:bg-gray-"]):not(:disabled):hover {
+  background-color: var(--admin-primary-soft) !important;
+  color: var(--admin-text) !important;
+}
+.admin-theme .partner-modal-panel :is([class*="border-violet-"]) {
+  border-color: var(--admin-border) !important;
+}
+.admin-theme .partner-modal-panel :is([class~="text-slate-300"], [class~="text-gray-300"]) {
+  color: var(--admin-muted) !important;
 }
