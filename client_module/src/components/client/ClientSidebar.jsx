@@ -25,15 +25,11 @@ const workspaceLinks = [
   { label: "Vehicle Tracking", path: "/client/tracking", icon: MapPinned },
   { label: "My Vehicles", path: "/client/vehicles", icon: Truck },
   {label: "My Drivers", path: "/client/drivers", icon:UserRound},
+  {label: "My Trips", path: "/client/trips", icon: CalendarDays,},
   {
     label: "Explore Services",
     path: "/client/services",
     icon: Wrench,
-  },
-  {
-    label: "My Bookings",
-    path: "/client/bookings",
-    icon: CalendarDays,
   },
 ];
 

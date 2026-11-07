@@ -1,12 +1,17 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Truck, ShieldCheck, Clock3, Radio, RefreshCw, ArrowUpRight } from "lucide-react";
+import { Truck, ShieldCheck, Clock3, Radio, RefreshCw, ArrowUpRight, UsersRound, CalendarDays, Activity, CheckCircle2 } from "lucide-react";
 import { getVehicles } from "../../services/vehicleService";
 import { getClientTracking } from "../../services/trackingMapService";
+
+import { getDrivers } from "../../services/driverService";
+import { getTrips } from "../../services/tripService";
 
 export default function ClientDashboard() {
   const [vehicles, setVehicles] = useState([]);
   const [tracking, setTracking] = useState([]);
+  const [drivers, setDrivers] = useState([]);
+  const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [reload, setReload] = useState(0);
@@ -19,15 +24,19 @@ export default function ClientDashboard() {
 
     async function loadDashboard() {
       try {
-        // Dono existing APIs hain: SQL vehicles aur MongoDB tracking.
-        const [vehicleResult, trackingResult] = await Promise.all([
+        // Existing APIs se vehicles, tracking, drivers aur trips lo.
+        const [vehicleResult, trackingResult, driverResult, tripResult] = await Promise.all([
           getVehicles(),
           getClientTracking(controller.signal),
+          getDrivers(),
+          getTrips(),
         ]);
 
         if (cancelled) return;
         setVehicles(vehicleResult.data);
         setTracking(trackingResult.data);
+        setDrivers(driverResult.data);
+        setTrips(tripResult.data);
         setUpdatedAt(new Date());
         setError("");
       } catch (error) {
@@ -58,11 +67,19 @@ export default function ClientDashboard() {
   const offline = tracking.filter(vehicle => vehicle.trackingStatus === "offline").length;
   const noLocation = tracking.filter(vehicle => vehicle.trackingStatus === "no_location").length;
 
+  const scheduled = trips.filter(trip => trip.status === "scheduled").length;
+  const ongoing = trips.filter(trip => trip.status === "ongoing").length;
+  const completed = trips.filter(trip => trip.status === "completed").length;
+
   const cards = [
     { title: "Total Vehicles", value: vehicles.length, icon: Truck },
     { title: "Verified", value: verified, icon: ShieldCheck },
     { title: "Pending Review", value: pending, icon: Clock3 },
     { title: "Live Tracking", value: live, icon: Radio },
+    { title: "Total Drivers", value: drivers.length, icon: UsersRound },
+    { title: "Scheduled Trips", value: scheduled, icon: CalendarDays },
+    { title: "Ongoing Trips", value: ongoing, icon: Activity },
+    { title: "Completed Trips", value: completed, icon: CheckCircle2 },
   ];
 
   return (
@@ -70,7 +87,7 @@ export default function ClientDashboard() {
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold text-white">Dashboard</h1>
-          <p className="mt-1 text-xs text-slate-400">Your vehicles, verification and location updates.</p>
+          <p className="mt-1 text-xs text-slate-400">Your vehicles, drivers, trips and tracking updates.</p>
         </div>
         <button type="button" disabled={loading} onClick={() => {
           setLoading(true);
@@ -143,6 +160,8 @@ export default function ClientDashboard() {
           <div className="flex flex-wrap items-center gap-3">
             <Link to="/client/vehicles" className="rounded-lg bg-violet-500 px-4 py-2 text-xs font-medium text-white hover:bg-violet-400">Manage Vehicles</Link>
             <Link to="/client/tracking" className="rounded-lg border border-white/10 px-4 py-2 text-xs text-slate-200 hover:bg-white/5">Open Tracking Map</Link>
+            <Link to="/client/drivers" className="rounded-lg border border-white/10 px-4 py-2 text-xs text-slate-200 hover:bg-white/5">My Drivers</Link>
+            <Link to="/client/trips" className="rounded-lg border border-white/10 px-4 py-2 text-xs text-slate-200 hover:bg-white/5">My Trips</Link>
             <p className="text-[11px] text-slate-500">Updated {updatedAt?.toLocaleTimeString()} · Auto refresh: 15 seconds</p>
           </div>
           <p className="text-[11px] text-slate-500">Tracking counts cover verified vehicles. Live means a recent location update, and does not indicate whether the vehicle is moving.</p>

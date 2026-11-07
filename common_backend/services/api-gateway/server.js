@@ -114,6 +114,8 @@ app.use(
   "/api/client/profile",
  "/api/client/vehicles",
  "/api/client/drivers",
+ "/api/client/trips",
+ "/api/client/service-requests",
 ],
   proxyTo(process.env.CLIENT_SERVICE_URL)
 );

@@ -6,6 +6,8 @@ const clientProfileRouter = require("./src/routes/clientProfileRoute");
 const clientTerms = require("./src/config/clientTerms");
 const clientVehicleRouter = require("./src/routes/clientVehicleRoute");
 const clientDriverRouter = require("./src/routes/clientDriverRoute");
+const clientTripRouter = require("./src/routes/clientTripRoute");
+const clientServiceRequestRouter =require("./src/routes/clientServiceRequestRoute");
 
 const app = express();
 
@@ -35,6 +37,8 @@ app.use("/",internalClientRouter);
 app.use("/", clientProfileRouter);
 app.use("/",clientVehicleRouter);
 app.use("/", clientDriverRouter);
+app.use("/",clientTripRouter);
+app.use("/",clientServiceRequestRouter );
 
 const PORT = process.env.SERVER_PORT || 5004;
 

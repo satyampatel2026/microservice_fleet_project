@@ -116,6 +116,34 @@ const validateSelectedServices = async (req, res) => {
   }
 };
 
-module.exports = {
-  validateSelectedServices,
+const getActiveServices = async (req, res) => {
+  try {
+    const [services] = await connection.query(
+      `SELECT
+         s.service_id,
+         s.service_name,
+         s.category_id,
+         c.category_name
+       FROM category_services s
+       INNER JOIN service_categories c
+         ON c.category_id = s.category_id
+       WHERE s.status = 'active'
+         AND c.status = 'active'
+       ORDER BY c.category_name ASC, s.service_name ASC`
+    );
+
+    return res.json({
+      success: true,
+      data: services,
+    });
+  } catch (error) {
+    console.error("Get active services:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Unable to load active services",
+    });
+  }
 };
+
+module.exports = {validateSelectedServices,getActiveServices};
