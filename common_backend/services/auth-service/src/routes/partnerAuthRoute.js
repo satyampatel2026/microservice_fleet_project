@@ -17,29 +17,31 @@ const {
 
 const authMiddleware = require("../middlewares/authMiddleware");
 const verifyCaptcha = require("../middlewares/verifyCaptcha");
+const loginRateLimiter = require("../middlewares/loginRateLimiter");
 
 // ================= PARTNER AUTH =================
 
 // Register
 partnerAuthRouter.post(
-  "/api/partner/register",verifyCaptcha,
+  "/api/partner/register",
+  verifyCaptcha,
   registerPartnerV2
 );
 
-
 // Login
 partnerAuthRouter.post(
-  "/api/partner/login",verifyCaptcha,
+  "/api/partner/login",
+  loginRateLimiter,
+  verifyCaptcha,
   loginPartnerV2
 );
 
-
 // Forgot Password
 partnerAuthRouter.post(
-  "/api/partner/forgot-password",verifyCaptcha,
+  "/api/partner/forgot-password",
+  verifyCaptcha,
   forgotPasswordV2
 );
-
 
 // Verify OTP
 partnerAuthRouter.post(
@@ -47,13 +49,11 @@ partnerAuthRouter.post(
   verifyOtpV2
 );
 
-
 // Reset Password
 partnerAuthRouter.post(
   "/api/partner/reset-password",
   resetPasswordV2
 );
-
 
 // Logout
 partnerAuthRouter.post(
@@ -61,14 +61,12 @@ partnerAuthRouter.post(
   logoutPartner
 );
 
-
 // ================= VERIFY PARTNER TOKEN =================
 
 partnerAuthRouter.get(
   "/api/partner/auth/verify",
   authMiddleware,
   (req, res) => {
-
     // Admin token ko partner endpoint use nahi karne dena
     if (req.user.type !== "partner") {
       return res.status(403).json({
@@ -87,6 +85,5 @@ partnerAuthRouter.get(
     });
   }
 );
-
 
 module.exports = partnerAuthRouter;
