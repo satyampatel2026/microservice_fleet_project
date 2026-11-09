@@ -9,13 +9,15 @@ const {
 
 const authMiddleware = require("../middlewares/authMiddleware");
 const verifyCaptcha = require("../middlewares/verifyCaptcha");
+const loginRateLimiter = require("../middlewares/loginRateLimiter");
 
 // Admin Login
 adminAuthRouter.post(
-  "/api/admin/login",verifyCaptcha,
+  "/api/admin/login",
+  loginRateLimiter,
+  verifyCaptcha,
   loginUserV2
 );
-
 
 adminAuthRouter.post(
   "/api/admin/logout",
@@ -27,7 +29,6 @@ adminAuthRouter.get(
   "/api/admin/auth/verify",
   authMiddleware,
   (req, res) => {
-
     // Partner token ko admin endpoint use nahi karne dena
     if (req.user.type !== "admin") {
       return res.status(403).json({
@@ -46,6 +47,5 @@ adminAuthRouter.get(
     });
   }
 );
-
 
 module.exports = adminAuthRouter;
