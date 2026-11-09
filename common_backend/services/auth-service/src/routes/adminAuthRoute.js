@@ -14,8 +14,8 @@ const loginRateLimiter = require("../middlewares/loginRateLimiter");
 // Admin Login
 adminAuthRouter.post(
   "/api/admin/login",
-  loginRateLimiter,
   verifyCaptcha,
+  loginRateLimiter,
   loginUserV2
 );
 
