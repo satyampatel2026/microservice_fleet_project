@@ -31,8 +31,8 @@ partnerAuthRouter.post(
 // Login
 partnerAuthRouter.post(
   "/api/partner/login",
-  loginRateLimiter,
   verifyCaptcha,
+  loginRateLimiter,
   loginPartnerV2
 );
 
