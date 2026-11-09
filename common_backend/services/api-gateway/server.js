@@ -20,6 +20,7 @@ app.use(cors({
 const proxyTo = (target) =>
   createProxyMiddleware({
     target,
+    xfwd: true, // Append the real client IP for the Auth Service rate limiter.
     changeOrigin: true,
     // Preserve the original /api/... path
     pathRewrite: (path, req) => req.originalUrl,
