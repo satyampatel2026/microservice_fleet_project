@@ -14,6 +14,10 @@ const app = express();
 
 const PORT = process.env.SERVER_PORT || 5001;
 
+// Auth Service is accessed through one API Gateway proxy.
+// Do not expose this service directly to untrusted networks.
+app.set("trust proxy", 1);
+
 // Middlewares
 app.use(
   cors({
@@ -35,7 +39,6 @@ app.use("/", partnerAuthRouter);
 app.use("/", internalAdminAccountRouter);
 app.use("/", clientAuthRouter);
 app.use("/", internalClientAccountRouter);
-
 
 app.listen(PORT, () => {
   console.log(`Auth service is running on port ${PORT}`);
