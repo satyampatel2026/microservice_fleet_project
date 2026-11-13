@@ -21,6 +21,7 @@ const proxyTo = (target) =>
   createProxyMiddleware({
     target,
     changeOrigin: true,
+    xfwd: true,
     // Preserve the original /api/... path
     pathRewrite: (path, req) => req.originalUrl,
   });

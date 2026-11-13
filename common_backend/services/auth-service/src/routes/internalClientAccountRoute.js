@@ -13,7 +13,7 @@ const verifyInternalKey = (req, res, next) => {
       !crypto.timingSafeEqual(Buffer.from(received), Buffer.from(expected))) {
     return res.status(403).json({ success: false, message: "Forbidden" });
   }
-  next();
+  next(); 
 };
 
 internalCLientRouter.patch("/internal/auth/client-accounts/:clientId/status", verifyInternalKey, updateClientAccountStatus);

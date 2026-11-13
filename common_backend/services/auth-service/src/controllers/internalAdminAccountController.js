@@ -172,7 +172,4 @@ const deleteAdminAccount = async (req, res) => {
   }
 };
 
-module.exports = {
-  provisionAdminAccount,deleteAdminAccount,
-  verifyInternalService,updateAdminAccount
-};
+module.exports = {provisionAdminAccount,deleteAdminAccount, verifyInternalService,updateAdminAccount};

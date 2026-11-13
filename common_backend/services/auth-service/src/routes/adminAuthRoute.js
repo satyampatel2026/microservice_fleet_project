@@ -3,29 +3,19 @@ const express = require("express");
 const adminAuthRouter = express.Router();
 
 const { logoutUser } = require("../controllers/logoutController");
-const {
-  loginUserV2,
-} = require("../controllers/adminAuthV2Controller");
+const { loginUserV2,} = require("../controllers/adminAuthV2Controller");
 
 const authMiddleware = require("../middlewares/authMiddleware");
 const verifyCaptcha = require("../middlewares/verifyCaptcha");
+const createLoginRateLimiter =require("../middlewares/loginRateLimiter");
+const adminLoginLimiter = createLoginRateLimiter();
 
 // Admin Login
-adminAuthRouter.post(
-  "/api/admin/login",verifyCaptcha,
-  loginUserV2
-);
-
-
-adminAuthRouter.post(
-  "/api/admin/logout",
-  logoutUser
-);
+adminAuthRouter.post("/api/admin/login",adminLoginLimiter,verifyCaptcha,loginUserV2);
+adminAuthRouter.post("/api/admin/logout",logoutUser);
 
 // Admin authentication check
-adminAuthRouter.get(
-  "/api/admin/auth/verify",
-  authMiddleware,
+adminAuthRouter.get("/api/admin/auth/verify",authMiddleware,
   (req, res) => {
 
     // Partner token ko admin endpoint use nahi karne dena

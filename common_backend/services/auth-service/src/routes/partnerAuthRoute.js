@@ -3,17 +3,11 @@ const express = require("express");
 const partnerAuthRouter = express.Router();
 
 const { logoutPartner } = require("../controllers/logoutController");
-const {
-  forgotPasswordV2,
-  verifyOtpV2,
-  resetPasswordV2,
-} = require("../controllers/partnerPasswordResetV2Controller");
-const {
-  registerPartnerV2,
-} = require("../controllers/partnerRegisterV2Controller");
-const {
-  loginPartnerV2,
-} = require("../controllers/partnerAuthV2Controller");
+const {forgotPasswordV2,verifyOtpV2,resetPasswordV2,} = require("../controllers/partnerPasswordResetV2Controller");
+const {registerPartnerV2,} = require("../controllers/partnerRegisterV2Controller");
+const {loginPartnerV2,} = require("../controllers/partnerAuthV2Controller");
+const createLoginRateLimiter = require("../middlewares/loginRateLimiter");
+const partnerLoginLimiter = createLoginRateLimiter();
 
 const authMiddleware = require("../middlewares/authMiddleware");
 const verifyCaptcha = require("../middlewares/verifyCaptcha");
@@ -21,52 +15,26 @@ const verifyCaptcha = require("../middlewares/verifyCaptcha");
 // ================= PARTNER AUTH =================
 
 // Register
-partnerAuthRouter.post(
-  "/api/partner/register",verifyCaptcha,
-  registerPartnerV2
-);
-
+partnerAuthRouter.post("/api/partner/register",verifyCaptcha,registerPartnerV2);
 
 // Login
-partnerAuthRouter.post(
-  "/api/partner/login",verifyCaptcha,
-  loginPartnerV2
-);
-
+partnerAuthRouter.post( "/api/partner/login",partnerLoginLimiter,verifyCaptcha,loginPartnerV2);
 
 // Forgot Password
-partnerAuthRouter.post(
-  "/api/partner/forgot-password",verifyCaptcha,
-  forgotPasswordV2
-);
-
+partnerAuthRouter.post("/api/partner/forgot-password",verifyCaptcha,forgotPasswordV2);
 
 // Verify OTP
-partnerAuthRouter.post(
-  "/api/partner/verify-otp",
-  verifyOtpV2
-);
-
+partnerAuthRouter.post("/api/partner/verify-otp",verifyOtpV2);
 
 // Reset Password
-partnerAuthRouter.post(
-  "/api/partner/reset-password",
-  resetPasswordV2
-);
-
+partnerAuthRouter.post("/api/partner/reset-password",resetPasswordV2);
 
 // Logout
-partnerAuthRouter.post(
-  "/api/partner/logout",
-  logoutPartner
-);
-
+partnerAuthRouter.post("/api/partner/logout",logoutPartner);
 
 // ================= VERIFY PARTNER TOKEN =================
 
-partnerAuthRouter.get(
-  "/api/partner/auth/verify",
-  authMiddleware,
+partnerAuthRouter.get("/api/partner/auth/verify",authMiddleware,
   (req, res) => {
 
     // Admin token ko partner endpoint use nahi karne dena

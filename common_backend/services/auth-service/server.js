@@ -11,6 +11,7 @@ const clientAuthRouter = require("./src/routes/clientAuthRoute");
 const internalClientAccountRouter = require("./src/routes/internalClientAccountRoute");
 
 const app = express();
+app.set("trust proxy", 1);
 
 const PORT = process.env.SERVER_PORT || 5001;
 

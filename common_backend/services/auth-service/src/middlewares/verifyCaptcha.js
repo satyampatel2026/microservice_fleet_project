@@ -1,5 +1,6 @@
 const verifyCaptcha = async (req, res, next) => {
   const { captchaToken } = req.body;
+  
 
   if (!captchaToken || typeof captchaToken !== "string") {
     return res.status(400).json({
