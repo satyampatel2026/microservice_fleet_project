@@ -1,8 +1,8 @@
 
 import { useEffect, useState, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import ClientNotificationBell from "./ClientNotificationBell";
 import {
-  Bell,
   Menu,
   Search,
   ChevronDown,
@@ -101,16 +101,7 @@ export default function ClientTopbar({ setMobileOpen, client }) {
           >
             {searchOpen ? <X size={20} /> : <Search size={20} />}
           </button>
-
-          <button
-            type="button"
-            disabled
-            title="Notifications coming soon"
-            aria-label="Notifications coming soon"
-            className="cursor-not-allowed rounded-xl p-2.5 text-gray-500"
-          >
-            <Bell size={20} />
-          </button>
+          <ClientNotificationBell />
 
           <div className="h-8 w-px bg-white/10" />
 

@@ -13,6 +13,9 @@ const internalCatalogRouter = require("./src/routes/internalCatalogRoute");
 const adminClientRouter = require("./src/routes/adminClientRoute");
 const adminProfileRouter = require("./src/routes/adminProfileRoute");
 const adminVehicleBusinessRouter = require("./src/routes/adminVehicleBusinessRoute");
+const serviceRequestRouter = require("./src/routes/serviceRequestRoute");
+const adminNotificationRoutes = require("./src/routes/adminNotificationRoutes");
+
 const app = express();
 const PORT = process.env.SERVER_PORT || 5002;
 
@@ -38,7 +41,8 @@ app.use("/", internalCatalogRouter);
 app.use("/", adminClientRouter);
 app.use("/", adminVehicleBusinessRouter);
 app.use("/", adminProfileRouter);
-
+app.use("/",serviceRequestRouter);
+app.use(adminNotificationRoutes);
 // ================= SERVER =================
 
 app.listen(PORT, () => {

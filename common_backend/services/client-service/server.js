@@ -8,6 +8,8 @@ const clientVehicleRouter = require("./src/routes/clientVehicleRoute");
 const clientDriverRouter = require("./src/routes/clientDriverRoute");
 const clientTripRouter = require("./src/routes/clientTripRoute");
 const clientServiceRequestRouter =require("./src/routes/clientServiceRequestRoute");
+const clientPushTokenRouter = require("./src/routes/clientPushTokenRoute");
+const clientNotificationRouter = require("./src/routes/clientNotificationRoute");
 
 const app = express();
 
@@ -39,6 +41,8 @@ app.use("/",clientVehicleRouter);
 app.use("/", clientDriverRouter);
 app.use("/",clientTripRouter);
 app.use("/",clientServiceRequestRouter );
+app.use("/", clientPushTokenRouter);
+app.use("/", clientNotificationRouter);
 
 const PORT = process.env.SERVER_PORT || 5004;
 

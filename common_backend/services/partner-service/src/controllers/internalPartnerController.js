@@ -274,5 +274,51 @@ const activatePartnerProfile = async (req, res) => {
   }
 };
 
+const checkPartnerServiceEligibility = async (req, res) => {
+  const partnerId = Number(req.params.partnerId);
+  const serviceId = Number(req.params.serviceId);
 
-module.exports = { getPartnerProfile,createPartnerProfile,activatePartnerProfile };
+  if (
+    !Number.isSafeInteger(partnerId) || partnerId <= 0 ||
+    !Number.isSafeInteger(serviceId) || serviceId <= 0
+  ) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid partner or service ID",
+    });
+  }
+
+  try {
+    const [rows] = await connection.query(
+      `SELECT p.partner_id
+       FROM partners p
+       INNER JOIN partner_services ps
+         ON ps.partner_id = p.partner_id
+        AND ps.service_id = ?
+       INNER JOIN partner_kyc k
+         ON k.kyc_id = (
+           SELECT MAX(latest.kyc_id)
+           FROM partner_kyc latest
+           WHERE latest.partner_id = p.partner_id
+         )
+       WHERE p.partner_id = ?
+         AND p.status = 'active'
+         AND k.kyc_status = 'verified'
+       LIMIT 1`,
+      [serviceId, partnerId]
+    );
+
+    return res.json({
+      success: true,
+      data: { eligible: rows.length === 1 },
+    });
+  } catch (error) {
+    console.error("Partner service eligibility:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Unable to verify partner eligibility",
+    });
+  }
+};
+
+module.exports = { getPartnerProfile,createPartnerProfile,activatePartnerProfile ,checkPartnerServiceEligibility};

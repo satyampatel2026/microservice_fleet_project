@@ -6,3 +6,5 @@ build/
 *.log
 myfiles/
 /fleet_management_backup.sql
+/firebase-service-account.json
+common_backend/services/firebase-service-account.json

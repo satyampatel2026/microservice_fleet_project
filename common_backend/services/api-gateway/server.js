@@ -69,6 +69,7 @@ app.use(
     "/api/admin/kyc",
     "/api/partner/kyc",
     "/api/partner/my-services",
+    "/api/partner/jobs",
     "/api/partners/me",
     "/api/partner/profile",
   ],
@@ -92,6 +93,8 @@ app.use(
     "/api/admin/clients",
     "/api/admin/profile",
     "/api/admin/verification",
+    "/api/admin/service-requests",
+    "/api/admin/notifications",
   ],
   proxyTo(process.env.USER_SERVICE_URL)
 );
@@ -117,6 +120,8 @@ app.use(
  "/api/client/drivers",
  "/api/client/trips",
  "/api/client/service-requests",
+ "/api/client/push-token",
+ "/api/client/notifications",
 ],
   proxyTo(process.env.CLIENT_SERVICE_URL)
 );

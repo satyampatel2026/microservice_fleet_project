@@ -101,7 +101,8 @@ const getPartners = async (req, res) => {
          p.status,
          p.created_at,
          k.kyc_id,
-         k.kyc_status
+         k.kyc_status,
+         k.business_name
        FROM partners p
        LEFT JOIN partner_kyc k
          ON k.kyc_id = (

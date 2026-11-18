@@ -1,7 +1,7 @@
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { LayoutDashboard, UsersRound, Layers3, ShieldCheck, Handshake, FolderKanban, ChevronRight, ChevronDown, X, MapPin } from "lucide-react";
+import { LayoutDashboard, UsersRound, Layers3, ShieldCheck, Handshake, FolderKanban, ChevronRight, ChevronDown, X, MapPin,ClipboardList } from "lucide-react";
 const navItems = [{
   to: "/admin/dashboard",
   label: "Dashboard",
@@ -29,6 +29,10 @@ const navItems = [{
     label: "Services"
   }]
 }, {
+  to: "/admin/service-requests",
+  label: "Service Requests",
+  icon: ClipboardList,
+},{
   to: "/admin/partnerspage",
   label: "Partners Management",
   icon: Handshake

@@ -12,6 +12,7 @@
   "dependencies": {
     "@marsidev/react-turnstile": "^1.6.2",
     "@tailwindcss/vite": "^4.3.3",
+    "firebase": "^13.3.0",
     "formik": "^2.4.9",
     "leaflet": "^1.9.4",
     "lucide-react": "^1.59.0",

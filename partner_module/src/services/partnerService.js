@@ -146,3 +146,31 @@ export async function updatePartnerProfile(formData) {
 export async function uploadPartnerPhoto(formData) {
   return request(`${AUTH_URL}/profile/photo`, { method: "POST", body: formData });
 }
+
+export async function getMyAssignedJobs() {
+  return request("http://localhost:5000/api/partner/jobs", {
+    method: "GET",
+  });
+}
+
+export function updateMyJobStatus(requestId, status) {
+  return request(
+    `http://localhost:5000/api/partner/jobs/${requestId}/status`,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    }
+  );
+}
+
+export function declineMyJob(requestId, reason) {
+  return request(
+    `http://localhost:5000/api/partner/jobs/${requestId}/decline`,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reason }),
+    }
+  );
+}

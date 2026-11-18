@@ -12,6 +12,7 @@ import Services from "./pages/admin/Services";
 import ClientsPage from "./pages/clients/ClientsPage";
 import AdminProfile from "./pages/admin/AdminProfile";
 import AdminTracking from "./pages/clients/AdminTracking";
+import ServiceRequests from "./pages/admin/ServiceRequests";
 
 function App() {
   return <Routes>
@@ -30,6 +31,7 @@ function App() {
           <Route path="services" element={<Services />} />
           <Route path="clients" element={<ClientsPage />} />
           <Route path="tracking" element={<AdminTracking/>}/>
+          <Route path="service-requests" element={<ServiceRequests/>}/>
           <Route path="verification" element={<Navigate to="/admin/clients" replace />} />
         </Route>
       </Route>

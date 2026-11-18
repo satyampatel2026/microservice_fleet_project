@@ -215,7 +215,19 @@ const registerClient = async (req, res) => {
        WHERE client_id = ? AND email = ?`,
       [clientId, normalizedEmail]
     );
-
+    try {
+     await axios.post(
+    `${CLIENT_SERVICE_URL}/internal/clients/${clientId}/notifications`,
+    {
+      title: "Welcome!",
+      message: `Welcome to Fleet Management, ${name.trim()}. Your account is ready.`,
+      notification_type: "welcome",
+    },
+    options
+  );
+   } catch (notificationError) {
+  console.error("Welcome notification failed:", notificationError.message);
+  }
     return res.status(201).json({
       success: true,
       message: "Client registered successfully",

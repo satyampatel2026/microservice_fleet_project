@@ -188,6 +188,24 @@ const createServiceRequest = async (req, res) => {
         preferredDate,
       ]
     );
+    await db.query(
+  `UPDATE vehicle_service_requests
+   SET request_code = CONCAT(
+     'SR-',
+     YEAR(created_at),
+     '-',
+     LPAD(request_id, 6, '0')
+   )
+   WHERE request_id = ?`,
+  [saved.insertId]
+);
+
+const [createdRows] = await db.query(
+  `SELECT request_code
+   FROM vehicle_service_requests
+   WHERE request_id = ?`,
+  [saved.insertId]
+);
 
     return res.status(201).json({
       success: true,
@@ -195,6 +213,7 @@ const createServiceRequest = async (req, res) => {
       data: {
         request_id: saved.insertId,
         status: "pending",
+        request_code: createdRows[0].request_code,
         service_name: service.service_name,
       },
     });
@@ -212,13 +231,13 @@ const getMyServiceRequests = async (req, res) => {
   try {
     const [requests] = await db.query(
       `SELECT
-         request_id,
+         request_code,
          vehicle_id,
          service_id,
          service_name,
          problem_description,
          priority,
-         preferred_date,
+         DATE_FORMAT(preferred_date, '%Y-%m-%d') AS preferred_date,
          status,
          assigned_partner_id,
          assigned_at,
@@ -245,4 +264,42 @@ const getMyServiceRequests = async (req, res) => {
   }
 };
 
-module.exports = {getServiceRequestOptions,createServiceRequest,getMyServiceRequests};
+const cancelServiceRequest=async(req,res)=>{
+  const requestId=Number(req.params.requestId)
+  if(!Number.isSafeInteger(requestId) || requestId <=0){
+    return res.status(400).json({
+      success:false,
+      message:"Invalid service request Id",
+    });
+  }
+  try{
+   const [result]=await db.query(`UPDATE vehicle_service_requests set status='cancelled',updated_at=CURRENT_TIMESTAMP where request_id= ? and client_id= ?
+    and status='pending'`,[requestId,req.clientId]);
+    if(result.affectedRows===0){
+      const [requests]=await db.query(`SELECT status from vehicle_service_requests WHERE request_id=? AND client_id=? LIMIT 1`,[requestId,req.clientId]);
+      if(requests.length===0){
+        return res.status(404).json({
+          success:false,
+          message:"service request not found",
+        })
+      }
+      return res.status(409).json({
+        success:false,
+        message:"only pending request can be cancelled"
+      });
+    }
+    return res.json({
+      success:true,
+      message:"service request cancelled",
+      data:{request_id:requestId,status:"cancelled"}
+    })
+  }catch(error){
+   console.log("cancel service request:",error.message);
+   return res.status(500).json({
+    success:false,
+    message:"unable to cancel service request"
+   });
+  }
+}
+
+module.exports = {getServiceRequestOptions,createServiceRequest,getMyServiceRequests,cancelServiceRequest};

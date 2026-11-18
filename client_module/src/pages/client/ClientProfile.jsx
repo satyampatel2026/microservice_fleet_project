@@ -77,18 +77,9 @@ export default function ClientProfile() {
       gender: Yup.string().oneOf(["", "male", "female", "other"], "Select a valid gender"),
       company_name: Yup.string().trim().min(2, "Minimum 2 characters").max(150, "Maximum 150 characters"),
       business_type: Yup.string().trim().max(60, "Maximum 60 characters"),
-      gstin: Yup.string().trim().uppercase().matches(/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/, {
-        message: "Enter valid GSTIN",
-        excludeEmptyString: true
-      }),
-      pan_number: Yup.string().trim().uppercase().matches(/^[A-Z]{5}[0-9]{4}[A-Z]$/, {
-        message: "Enter valid PAN",
-        excludeEmptyString: true
-      }),
-      aadhaar_number: Yup.string().matches(/^[2-9][0-9]{11}$/, {
-        message: "Enter valid 12 digit Aadhaar",
-        excludeEmptyString: true
-      })
+      gstin: Yup.string().trim().uppercase().required("GSTIN is required").matches(/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/, "Enter valid GSTIN"),
+      pan_number: Yup.string().trim().uppercase().required("PAN is required").matches(/^[A-Z]{5}[0-9]{4}[A-Z]$/, "Enter valid PAN"),
+      aadhaar_number: Yup.string().required("Aadhar No. is required").matches(/^[2-9][0-9]{11}$/, "Enter valid 12 digit Aadhaar")
     }),
     onSubmit: async values => {
       try {

@@ -8,6 +8,7 @@ import PartnerKyc from "./pages/PartnerKyc";
 import MyServices from "./pages/MyServices";
 import Employees from "./pages/Employees";
 import PartnerProfile from "./pages/PartnerProfile";
+import JobCards from "./pages/JobCards";
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
         <Route path="/partner/kyc" element={<PartnerKyc />} /> {/* KYC ko bhi yahan shift kar diya */}
         <Route path="/partner/services" element={<MyServices />} />
         <Route path="/partner/employees" element={<Employees />} />
+        <Route path="/partner/jobs" element={<JobCards />} />
       </Route>
 
       {/* Catch-all route */}

@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import Swal from "sweetalert2";
-import { Search, ArrowDownUp, ChevronDown, Eye, UsersRound, RefreshCw, X, Loader2, ShieldCheck, Truck, Check } from "lucide-react";
+import { Search, ArrowDownUp, ChevronDown, Eye, UsersRound, X, Loader2, ShieldCheck, Truck, Check,Send,RefreshCw  } from "lucide-react";
 import { getClients, getClientDetails, updateClientStatus } from "../../services/clientService";
 import { getVerificationList, saveVerification } from "../../services/verificationService";
+import SendBroadcastNotificationModal from "../../components/clients/SendBroadcastNotificationModal";
+import SendClientNotificationModal from "../../components/clients/SendClientNotificationModal";
 
 function formatDate(value) {
   if (!value) return "—";
@@ -31,6 +33,8 @@ export default function ClientsPage() {
   const [detailsMode, setDetailsMode] = useState("business");
   const [statusBusy, setStatusBusy] = useState(null);
   const [failedChange, setFailedChange] = useState(null);
+  const [showBroadcastModal, setShowBroadcastModal] = useState(false);
+  const [notificationClient, setNotificationClient] = useState(null);
   const statusLock = useRef(false);
 
   async function handleStatusChange(client, requestedStatus) {
@@ -117,7 +121,8 @@ export default function ClientsPage() {
               { label: "Pending Vehicles", value: stats?.pending_vehicles, color: "text-rose-600 dark:text-rose-300", dot: "bg-rose-500" },
             ].map((card) => <div key={card.label} className="min-w-[72px] rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 dark:border-white/10 dark:bg-[#191e2d]"><p className="flex items-center gap-1.5 text-[10px] text-slate-400"><span className={`h-1.5 w-1.5 rounded-full ${card.dot}`} />{card.label}</p><p className={`mt-0.5 text-sm font-semibold leading-4 tabular-nums ${card.color}`}>{card.value ?? "—"}</p></div>)}
           </div>
-        <button type="button" onClick={() => setReload(reload + 1)} disabled={loading} className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50 dark:border-white/10 dark:bg-white/5 dark:text-slate-300"><RefreshCw size={13} className={loading ? "animate-spin" : ""} />Refresh</button>
+        <button type="button" onClick={() => setShowBroadcastModal(true)} className="inline-flex items-center gap-1.5 rounded-lg bg-violet-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-violet-700">
+       <Send size={14} />Broadcast </button>
         </div>
       </header>
 
@@ -142,7 +147,7 @@ export default function ClientsPage() {
               <th scope="col" className="whitespace-nowrap px-3 py-2.5"><span className={`inline-flex items-center gap-1 ${businessStatus ? "text-violet-600 dark:text-violet-300" : ""}`}>Business<span className="relative inline-flex h-7 w-7 items-center justify-center rounded-md hover:bg-violet-100 focus-within:ring-2 focus-within:ring-violet-400 dark:hover:bg-violet-500/10"><ChevronDown size={13} aria-hidden="true"/><select aria-label="Filter business verification" title="Filter client business verification" value={businessStatus} onChange={event=>{setBusinessStatus(event.target.value);setPage(1);}} className="absolute inset-0 h-full w-full cursor-pointer opacity-0"><option value="">All clients</option><option value="pending">Pending</option><option value="verified">Verified</option><option value="rejected">Rejected</option></select></span>{businessStatus && <span className="text-[9px] capitalize">{businessStatus}</span>}</span></th>
               <th scope="col" className="whitespace-nowrap px-3 py-2.5">Registered</th>
               <th scope="col" className="whitespace-nowrap px-3 py-2.5 text-center"><span className={`inline-flex items-center gap-1 ${vehicleApproval ? "text-violet-600 dark:text-violet-300" : ""}`}>Vehicles<span className="relative inline-flex h-7 w-7 items-center justify-center rounded-md hover:bg-violet-100 focus-within:ring-2 focus-within:ring-violet-400 dark:hover:bg-violet-500/10"><ChevronDown size={13} aria-hidden="true"/><select aria-label="Filter clients by vehicle approval" title="Filter vehicle verification" value={vehicleApproval} onChange={event=>{setVehicleApproval(event.target.value);setPage(1);}} className="absolute inset-0 h-full w-full cursor-pointer opacity-0"><option value="">All vehicles</option><option value="pending">Has pending vehicles</option><option value="verified">Has verified vehicles</option><option value="rejected">Has rejected vehicles</option></select></span>{vehicleApproval && <span className="text-[9px] capitalize">{vehicleApproval}</span>}</span></th>
-              <th scope="col" className="whitespace-nowrap px-3 py-2.5 text-center">View Details</th>
+              <th scope="col" className="whitespace-nowrap px-3 py-2.5 text-center">Actions</th>
             </tr></thead>
             <tbody className="divide-y divide-slate-100 dark:divide-white/[0.06]">
               {loading ? <tr><td colSpan={10} className="px-3 py-12"><span role="status" className="flex items-center justify-center gap-2 text-xs text-slate-400"><Loader2 size={16} className="animate-spin" />Loading clients...</span></td></tr> : error ? <tr><td colSpan={10} className="px-3 py-8 text-center"><p role="alert" className="text-xs text-red-500">{error}</p><button type="button" onClick={() => setReload(reload + 1)} className="mt-2 text-xs font-semibold text-violet-600">Retry</button></td></tr> : clients.length === 0 ? <tr><td colSpan={10} className="px-3 py-12 text-center text-xs text-slate-400">No clients found. Try another search or status.</td></tr> : clients.map((client, index) => (
@@ -161,7 +166,35 @@ export default function ClientsPage() {
                   <td className="px-3 py-2.5"><button type="button" onClick={()=>openReview(client,"business")} title="Review client business" className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-semibold ${client.business_verification_status==="verified"?"bg-emerald-500/10 text-emerald-600 dark:text-emerald-300":client.business_verification_status==="rejected"?"bg-red-500/10 text-red-500":"bg-amber-500/10 text-amber-600 dark:text-amber-300"}`}><ShieldCheck size={12}/>{client.business_verification_status||"pending"}</button></td>
                   <td className="whitespace-nowrap px-3 py-2.5 text-[11px] text-slate-500 dark:text-slate-400">{formatDate(client.created_at)}</td>
                   <td className="px-3 py-2.5 text-center"><button type="button" onClick={()=>openReview(client,"vehicles")} title="Review this client's vehicles" className="inline-flex items-center gap-1.5 rounded-md border border-violet-200 bg-violet-50 px-2 py-1.5 text-violet-600 dark:border-violet-400/20 dark:bg-violet-400/10 dark:text-violet-300"><Truck size={14}/>{client.vehicle_count??0}</button>{Number(client.pending_vehicle_count)>0 && <button type="button" onClick={()=>openReview(client,"vehicles","pending")} title="Review pending vehicles only" className="mx-auto mt-1 block whitespace-nowrap rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-700 hover:bg-amber-500/20 dark:text-amber-300">{client.pending_vehicle_count} pending</button>}</td>
-                  <td className="px-3 py-2.5 text-center"><button type="button" onClick={() => openReview(client, "business")} title="Business details and verification" aria-label={`View details for ${client.name}`} className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-violet-100 bg-violet-50 text-violet-600 hover:bg-violet-100 dark:border-violet-400/15 dark:bg-violet-400/10 dark:text-violet-300"><Eye size={14} /></button></td>
+                  <td className="px-3 py-2.5"> <div className="flex items-center justify-center gap-2">
+             {/* View Details */}
+          <button
+      type="button"
+      onClick={() => openReview(client, "business")}
+      title="View client details"
+      className="inline-flex h-8 w-8 items-center justify-center
+      rounded-lg border border-slate-200 bg-white
+      text-slate-500 hover:border-violet-300 hover:bg-violet-50
+      hover:text-violet-600 dark:border-white/10 dark:bg-white/5
+      dark:text-slate-300"
+    >
+      <Eye size={15} />
+    </button>
+    {/* Send Individual Notification */}
+    <button
+      type="button"
+      onClick={() => setNotificationClient(client)}
+      title={`Send notification to ${client.name}`}
+      aria-label={`Send notification to ${client.name}`}
+      className="inline-flex h-8 w-8 items-center justify-center
+      rounded-lg bg-violet-600 text-white shadow-sm
+      transition hover:bg-violet-700 active:scale-95"
+    >
+      <Send size={14} />
+    </button>
+
+  </div>
+</td>
                 </tr>
               ))}
             </tbody>
@@ -179,6 +212,17 @@ export default function ClientsPage() {
         </div>
       </section>
       {selectedId !== null && <ClientReviewDialog key={`${detailsMode}-${selectedId}`} clientId={selectedId} mode={detailsMode} initialVehicleStatus={reviewVehicleStatus} onSaved={()=>setReload(value=>value+1)} onClose={() => setSelectedId(null)} />}
+    {/* Broadcast Notification Modal */}
+{showBroadcastModal && (
+  <SendBroadcastNotificationModal
+    onClose={() => setShowBroadcastModal(false)}
+  />
+)}{notificationClient && (
+  <SendClientNotificationModal
+    client={notificationClient}
+    onClose={() => setNotificationClient(null)} onSent={() => setReload(value => value + 1)}
+  />
+)}
     </div>
   );
 }

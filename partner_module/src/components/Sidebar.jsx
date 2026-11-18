@@ -14,8 +14,6 @@ import {
   LogOut,
   ChevronRight,
   X,
-  ShieldCheck,
-  Sparkles,
   Loader2,
 } from "lucide-react";
 
@@ -44,13 +42,7 @@ const menuItems = [
     label: "Job Cards",
     icon: ClipboardList,
     href: "/partner/jobs",
-    enabled: false,
-  },
-  {
-    label: "Customers",
-    icon: UserRound,
-    href: "/partner/customers",
-    enabled: false,
+    enabled: true,
   },
   {
     label: "Inventory",
@@ -69,12 +61,6 @@ const menuItems = [
     icon: BarChart3,
     href: "/partner/kyc",
     enabled: true,
-  },
-  {
-    label: "Settings",
-    icon: Settings,
-    href: "/partner/settings",
-    enabled: false,
   },
 ];
 

@@ -14,9 +14,9 @@ function getLocation() {
 }
 
 function locationMessage(error) {
-  if (error.code === 1) return "Location permission allow karo, phir dobara try karo.";
-  if (error.code === 2) return "Location nahi mil rahi. Mobile location/GPS on karo.";
-  if (error.code === 3) return "Location lene mein timeout hua. Dobara try karo.";
+  if (error.code === 1) return "Allow location permissions, then try again.";
+  if (error.code === 2) return "Location not found. Turn on mobile location/GPS.";
+  if (error.code === 3) return "Timed out while getting the location. Try again";
   return error.message || "Unable to update location";
 }
 
