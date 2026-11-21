@@ -158,7 +158,20 @@ const registerPartnerV2 = async (req, res) => {
     if (result.affectedRows !== 1) {
       throw new Error("Partner auth account not found");
     }
-
+      try {
+   await axios.post(`${PARTNER_SERVICE_URL}/internal/partners/${partnerId}/notifications`,
+    {
+      title: "Welcome to Fleetrova",
+      message: "Your partner account is ready.",
+      notification_type: "welcome",
+      request_id: null,
+    },
+    options
+  );
+} catch (notificationError) {
+  // Notification fail hone se registration fail nahi hogi.
+  console.error("Partner welcome notification:", notificationError.message);
+}
     // Existing frontend response same rakha hai
     return res.status(201).json({
       success: true,

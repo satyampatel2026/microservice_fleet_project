@@ -259,13 +259,16 @@ function TrackingMap({ vehicles, fitRequest, historyPoints, historyOpen }) {
   const fitted = useRef("");
   const historyLayer = useRef(null);
   useEffect(() => {
-    const instance = L.map(container.current).setView([22.5, 79], 5);
+    const instance = L.map(container.current, {attributionControl: false,}).setView([22.5, 79], 5);
     map.current = instance;
     historyLayer.current = L.layerGroup().addTo(instance);
-    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      maxZoom: 19,
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {maxZoom: 19,
     }).addTo(instance);
+    L.control.attribution({prefix: false,}).addAttribution(
+    '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> contributors'
+     )
+    .addTo(instance);
     const observer = new ResizeObserver(() => instance.invalidateSize());
     observer.observe(container.current);
     return () => { observer.disconnect(); instance.remove(); map.current = null; markers.current.clear(); fitted.current = ""; };

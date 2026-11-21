@@ -1,8 +1,5 @@
 const db = require("../model/db");
-const {
-  cloudinary,
-  uploadFile
-} = require("../config/cloudinary");
+const {cloudinary,uploadFile} = require("../config/cloudinary");
 const columns = `vehicle_id, vehicle_number, vehicle_type, brand, model, status,
   DATE_FORMAT(registration_date, '%Y-%m-%d') AS registration_date,
   DATE_FORMAT(expiry_date, '%Y-%m-%d') AS expiry_date,

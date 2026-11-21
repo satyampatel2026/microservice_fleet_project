@@ -70,6 +70,8 @@ app.use(
     "/api/partner/kyc",
     "/api/partner/my-services",
     "/api/partner/jobs",
+    "/api/partner/notifications",
+    "/api/partner/push-token",
     "/api/partners/me",
     "/api/partner/profile",
   ],

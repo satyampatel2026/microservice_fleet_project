@@ -174,3 +174,14 @@ export function declineMyJob(requestId, reason) {
     }
   );
 }
+
+export function getPartnerNotifications() {
+  return request("http://localhost:5000/api/partner/notifications");
+}
+
+export function markPartnerNotificationRead(notificationId) {
+  return request(
+    `http://localhost:5000/api/partner/notifications/${notificationId}/read`,
+    { method: "PATCH" }
+  );
+}

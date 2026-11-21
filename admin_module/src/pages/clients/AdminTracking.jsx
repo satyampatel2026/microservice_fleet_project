@@ -171,13 +171,19 @@ function TrackingMap({ vehicles, filterKey }) {
   const markers = useRef(null);
   const lastFit = useRef(null);
 
+  
   useEffect(() => {
-    map.current = L.map(container.current).setView([23.2599, 77.4126], 6);
-    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      maxZoom: 19,
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    }).addTo(map.current);
-    markers.current = L.layerGroup().addTo(map.current);
+  map.current = L.map(container.current, {attributionControl: false,}).setView([23.2599, 77.4126], 6);
+   L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19,
+  }).addTo(map.current);
+
+  // OpenStreetMap copyright credit (without Leaflet branding)
+  L.control.attribution({prefix: false,}).addAttribution(
+      '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> contributors'
+    ).addTo(map.current);
+
+  markers.current = L.layerGroup().addTo(map.current);
     // Layout animation/resize ke baad map ka size sahi rakho.
     const observer = new ResizeObserver(() => map.current?.invalidateSize());
     observer.observe(container.current);

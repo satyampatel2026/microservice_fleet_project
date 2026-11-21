@@ -242,7 +242,4 @@ const updateService = async (req, res) => {
   }
 };
 
-module.exports = {
-  getServices,
-  addService,updateService
-};
+module.exports = { getServices,addService,updateService};

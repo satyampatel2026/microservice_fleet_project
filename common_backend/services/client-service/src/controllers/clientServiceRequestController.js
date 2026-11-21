@@ -230,26 +230,11 @@ const [createdRows] = await db.query(
 const getMyServiceRequests = async (req, res) => {
   try {
     const [requests] = await db.query(
-      `SELECT
-         request_code,
-         vehicle_id,
-         service_id,
-         service_name,
-         problem_description,
-         priority,
-         DATE_FORMAT(preferred_date, '%Y-%m-%d') AS preferred_date,
-         status,
-         assigned_partner_id,
-         assigned_at,
-         rejection_reason,
-         created_at,
-         updated_at
-       FROM vehicle_service_requests
-       WHERE client_id = ?
-       ORDER BY request_id DESC`,
-      [req.clientId]
-    );
-
+        `SELECT vsr.request_id, vsr.request_code,vsr.vehicle_id,v.vehicle_number,vsr.service_id,vsr.service_name, vsr.problem_description,
+     vsr.priority, DATE_FORMAT(vsr.preferred_date, '%Y-%m-%d') AS preferred_date,vsr.status,vsr.assigned_partner_id,vsr.assigned_at,
+     vsr.rejection_reason,vsr.created_at,vsr.updated_at FROM vehicle_service_requests AS vsr JOIN vehicles AS v ON v.vehicle_id = vsr.vehicle_id
+   WHERE vsr.client_id = ? ORDER BY vsr.request_id DESC`, [req.clientId]); 
+   
     return res.json({
       success: true,
       data: requests,

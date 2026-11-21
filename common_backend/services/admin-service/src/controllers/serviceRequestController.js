@@ -107,7 +107,26 @@ async function assignServiceRequest(req, res) {
       { partner_id: partnerId },
       config
     );
-
+    if (assignResponse.data?.success === true) {
+  try {
+    await axios.post(
+      `${PARTNER_URL}/internal/partners/${partnerId}/notifications`,
+      {
+        title: "New service assigned",
+        message: `You have been assigned service request #${requestId}.`,
+        notification_type: "job_assigned",
+        request_id: requestId,
+      },
+      config
+    );
+  } catch (notificationError) {
+    // Assignment successful rahega; push/notification failure alag log hogi.
+    console.error(
+      "Partner assignment notification:",
+      notificationError.message
+    );
+  }
+}
     return res.status(assignResponse.status).json(assignResponse.data);
   } catch (error) {
     console.error("Assign service request:", error.message);

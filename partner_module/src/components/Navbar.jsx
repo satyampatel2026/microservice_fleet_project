@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { logoutPartner, getPartnerProfile } from "../services/partnerService";
+import PartnerNotificationBell from "./PartnerNotificationBell";
 import {
   UserRound,
   Menu,
@@ -19,24 +20,6 @@ import {
   ArrowUpRight,
   Loader2,
 } from "lucide-react";
-
-const notifications = [
-  {
-    title: "New job assigned",
-    detail: "Job #JOB-2042 • 2 min ago",
-    color: "bg-teal-500",
-  },
-  {
-    title: "Payment received",
-    detail: "₹12,500 from Rahul S.",
-    color: "bg-emerald-500",
-  },
-  {
-    title: "Leave request",
-    detail: "Amit Verma • 1 hr ago",
-    color: "bg-amber-500",
-  },
-];
 
 const Navbar = ({ onMenuClick }) => {
   const navigate = useNavigate();
@@ -280,74 +263,7 @@ const Navbar = ({ onMenuClick }) => {
             </button>
 
             {/* NOTIFICATIONS */}
-            <div className="relative" ref={notificationRef}>
-              <button
-                type="button"
-                onClick={() => {
-                  setNotifOpen((prev) => !prev);
-                  setProfileOpen(false);
-                }}
-                aria-label="Notifications"
-                aria-expanded={notifOpen}
-                className={`relative flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-200 ${
-                  notifOpen
-                    ? "bg-teal-50 text-teal-700"
-                    : "text-slate-500 hover:bg-teal-50 hover:text-teal-700"
-                }`}
-              >
-                <Bell size={18} strokeWidth={1.8} />
-
-                <span className="absolute right-[8px] top-[7px] h-[7px] w-[7px] rounded-full border-[1.5px] border-white bg-[#D6B77B]" />
-              </button>
-
-              {notifOpen && (
-                <div className="partner-nav-enter absolute right-[-48px] top-11 z-50 w-[min(320px,calc(100vw-24px))] overflow-hidden rounded-2xl border border-[#E4ECEA] bg-white shadow-[0_18px_55px_rgba(7,27,34,0.16)] sm:right-0">
-                  <div className="flex items-center justify-between border-b border-slate-100 bg-[#F9FBFA] px-4 py-3">
-                    <div>
-                      <h3 className="text-[13px] font-bold text-[#092B31]">
-                        Notifications
-                      </h3>
-                      <p className="mt-0.5 text-[10px] text-slate-400">
-                        Your recent activity
-                      </p>
-                    </div>
-
-                    <span className="rounded-full bg-teal-50 px-2.5 py-1 text-[10px] font-bold text-teal-700">
-                      3 new
-                    </span>
-                  </div>
-
-                  <div className="max-h-[300px] overflow-y-auto">
-                    {notifications.map((notification, index) => (
-                      <div
-                        key={index}
-                        className="flex gap-3 border-b border-slate-100 px-4 py-3 transition-colors last:border-0 hover:bg-[#F8FBFA]"
-                      >
-                        <span
-                          className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${notification.color}`}
-                        />
-
-                        <div className="min-w-0">
-                          <p className="truncate text-xs font-semibold text-[#18383C]">
-                            {notification.title}
-                          </p>
-
-                          <p className="mt-1 truncate text-[11px] text-slate-400">
-                            {notification.detail}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="border-t border-slate-100 bg-[#F9FBFA] px-4 py-3 text-center">
-                    <span className="text-[11px] font-semibold text-teal-700">
-                      Recent notifications
-                    </span>
-                  </div>
-                </div>
-              )}
-            </div>
+          <PartnerNotificationBell />
 
             {/* NEW JOB - visual only, route not supplied */}
             <button

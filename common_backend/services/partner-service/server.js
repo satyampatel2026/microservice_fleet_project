@@ -11,6 +11,7 @@ const internalPartnerRouter = require("./src/routes/internalPartnerRoute");
 const partnerServicesRouter = require("./src/routes/partnerServicesRoute");
 const partnerEmployeeRouter = require("./src/routes/partnerEmployeeRoute");
 const partnerProfileRouter = require("./src/routes/partnerProfileRoute");
+const partnerNotificationRouter = require("./src/routes/partnerNotificationRoute");
 const app = express();
 
 const PORT = process.env.SERVER_PORT || 5003;
@@ -37,6 +38,7 @@ app.use("/", internalPartnerRouter);
 app.use("/", partnerServicesRouter);
 app.use("/", partnerEmployeeRouter);
 app.use("/", partnerProfileRouter);
+app.use("/", partnerNotificationRouter);
 
 app.listen(PORT, () => {
   console.log(`Partner service is running on port ${PORT}`);
