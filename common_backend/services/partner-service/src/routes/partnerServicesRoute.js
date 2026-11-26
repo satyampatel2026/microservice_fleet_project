@@ -3,7 +3,7 @@ const partnerServicesRouter = express.Router();
 const partnerAuthMiddleware = require("../middlewares/partnerAuthMiddleware");
 
 const {getMyServices,updateMyServices,} = require("../controllers/partnerServicesController");
-const { getMyAssignedJobs,updateMyJobStatus,declineMyJob} = require("../controllers/partnerJobController");
+const { getMyAssignedJobs,updateMyJobStatus,declineMyJob,sendJobQuote} = require("../controllers/partnerJobController");
 
 // GET assigned services
 partnerServicesRouter.get("/api/partner/my-services",partnerAuthMiddleware,getMyServices);
@@ -13,4 +13,5 @@ partnerServicesRouter.get("/api/partner/jobs",partnerAuthMiddleware,getMyAssigne
 partnerServicesRouter.patch( "/api/partner/jobs/:requestId/status", partnerAuthMiddleware,updateMyJobStatus);
 partnerServicesRouter.patch( "/api/partner/jobs/:requestId/decline",partnerAuthMiddleware,declineMyJob);
 
+partnerServicesRouter.post("/api/partner/jobs/:requestId/quotes",partnerAuthMiddleware,sendJobQuote);
 module.exports = partnerServicesRouter;

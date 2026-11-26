@@ -1,625 +1,200 @@
-
-import React from "react";
+import Chart from "react-apexcharts";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { ClipboardList, Wrench, Wallet, Package, ArrowUpRight, RefreshCw } from "lucide-react";
 import Layout from "../layouts/Layout";
-import {
-  Wrench,
-  Users,
-  CheckCircle2,
-  IndianRupee,
-  TrendingUp,
-  Plus,
-  ArrowRight,
-  Star,
-  Clock,
-  Package,
-  ClipboardList,
-  ArrowUpRight,
-  Activity,
-  ShieldCheck,
-  Sparkles,
-} from "lucide-react";
-
-// DASHBOARD STATS - Existing demo data
-const stats = [
-  {
-    title: "Active Services",
-    value: "18",
-    icon: Wrench,
-    trend: "+3 this month",
-    color: "teal",
-  },
-  {
-    title: "Total Employees",
-    value: "24",
-    icon: Users,
-    trend: "+2 new hires",
-    color: "emerald",
-  },
-  {
-    title: "Jobs Completed",
-    value: "342",
-    icon: CheckCircle2,
-    trend: "+28 this week",
-    color: "champagne",
-  },
-  {
-    title: "Revenue",
-    value: "₹4.86L",
-    icon: IndianRupee,
-    trend: "+18% vs last month",
-    color: "deep",
-  },
-];
-
-// RECENT JOBS - Existing demo data
-const jobs = [
-  {
-    id: "#JOB-2041",
-    vehicle: "MH12 AB 1234",
-    service: "Engine Oil Change",
-    emp: "Suresh Patil",
-    status: "Completed",
-    tone: "completed",
-  },
-  {
-    id: "#JOB-2040",
-    vehicle: "MP04 CD 5678",
-    service: "Brake Pad Replacement",
-    emp: "Amit Verma",
-    status: "In Progress",
-    tone: "progress",
-  },
-  {
-    id: "#JOB-2039",
-    vehicle: "MP09 EF 9012",
-    service: "AC Repair",
-    emp: "Rajesh Kumar",
-    status: "Pending",
-    tone: "pending",
-  },
-  {
-    id: "#JOB-2038",
-    vehicle: "MH14 GH 3456",
-    service: "Tire Rotation",
-    emp: "Vikram Singh",
-    status: "Completed",
-    tone: "completed",
-  },
-];
-
-const quickActions = [
-  {
-    icon: Wrench,
-    title: "Add Service",
-    desc: "Create new workshop service",
-    color: "teal",
-    href: "/partner/services",
-    enabled: true,
-  },
-  {
-    icon: Users,
-    title: "Add Employee",
-    desc: "Register a new team member",
-    color: "emerald",
-    href: "/partner/employees",
-    enabled: false,
-  },
-  {
-    icon: Package,
-    title: "Inventory",
-    desc: "Check stock & orders",
-    color: "champagne",
-    href: "/partner/inventory",
-    enabled: false,
-  },
-  {
-    icon: TrendingUp,
-    title: "Reports",
-    desc: "View performance analytics",
-    color: "deep",
-    href: "/partner/reports",
-    enabled: false,
-  },
-];
-
-const employeeAvailability = [
-  {
-    label: "Available",
-    value: 14,
-    pct: 58,
-    color: "bg-[#14B8A6]",
-  },
-  {
-    label: "On Job",
-    value: 7,
-    pct: 29,
-    color: "bg-[#0E5957]",
-  },
-  {
-    label: "On Leave",
-    value: 3,
-    pct: 13,
-    color: "bg-[#D6B77B]",
-  },
-];
-
-const topPerformers = [
-  {
-    name: "Suresh Patil",
-    jobs: 42,
-    initials: "SP",
-    gradient: "from-[#0E3940] to-[#0F766E]",
-  },
-  {
-    name: "Amit Verma",
-    jobs: 38,
-    initials: "AV",
-    gradient: "from-[#0F766E] to-[#14B8A6]",
-  },
-];
-
-const toneMap = {
-  teal: {
-    bg: "bg-teal-50",
-    text: "text-teal-700",
-    border: "border-teal-100",
-    gradient: "from-[#0E3940] to-[#0F766E]",
-  },
-  emerald: {
-    bg: "bg-emerald-50",
-    text: "text-emerald-700",
-    border: "border-emerald-100",
-    gradient: "from-[#0F766E] to-[#14B8A6]",
-  },
-  champagne: {
-    bg: "bg-[#FBF6EB]",
-    text: "text-[#A7823D]",
-    border: "border-[#F0E4C9]",
-    gradient: "from-[#B79A60] to-[#D6B77B]",
-  },
-  deep: {
-    bg: "bg-[#EAF2F2]",
-    text: "text-[#0E3940]",
-    border: "border-[#D7E6E4]",
-    gradient: "from-[#071B22] to-[#0E3940]",
-  },
-};
-
-const statusStyles = {
-  completed:
-    "border-emerald-100 bg-emerald-50 text-emerald-700",
-  progress:
-    "border-teal-100 bg-teal-50 text-teal-700",
-  pending:
-    "border-amber-100 bg-amber-50 text-amber-700",
-};
-
-const showComingSoon = (label) => {
-  window.alert(
-    `"${label}" page is under development and will be available soon!`
-  );
-};
-
-const Dashboard = () => {
-  return (
-    <Layout activePath="/dashboard">
-      <div className="mx-auto w-full max-w-[1600px] space-y-5">
-
-        {/* PAGE HEADER */}
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="mb-1.5 flex items-center gap-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-teal-500" />
-              <span className="text-[10px] font-bold uppercase tracking-[0.17em] text-teal-700">
-                Partner Workspace
-              </span>
-            </div>
-
-            <h3 className="text-[22px] font-extrabold tracking-tight text-[#092B31] sm:text-[25px]">
-              Dashboard Overview
-            </h3>
-
-            <p className="mt-1 text-xs text-slate-500">
-              Track your workshop performance and daily operations.
-            </p>
-          </div>
-
-          <div className="inline-flex w-fit items-center gap-2 rounded-xl border border-[#DDEAE6] bg-white px-3 py-2 shadow-sm">
-            <ShieldCheck size={15} className="text-teal-700" />
-            <span className="text-[11px] font-semibold text-[#0E3940]">
-              Partner Dashboard
-            </span>
-          </div>
-        </div>
-
-        {/* STATS */}
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          {stats.map((stat) => {
-            const Icon = stat.icon;
-            const tone = toneMap[stat.color];
-
-            return (
-              <div
-                key={stat.title}
-                className="group relative overflow-hidden rounded-2xl border border-[#E2EBE8] bg-white p-4 shadow-[0_3px_16px_rgba(7,27,34,0.035)] transition-all duration-300 hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-[0_12px_28px_rgba(7,27,34,0.08)]"
-              >
-                <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-[#0F766E] via-[#14B8A6] to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
-
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="text-[11px] font-semibold text-slate-500">
-                      {stat.title}
-                    </p>
-
-                    <h3 className="mt-2 text-[27px] font-extrabold leading-none tracking-tight text-[#092B31]">
-                      {stat.value}
-                    </h3>
-                  </div>
-
-                  <div
-                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border ${tone.bg} ${tone.text} ${tone.border}`}
-                  >
-                    <Icon size={19} strokeWidth={2} />
-                  </div>
-                </div>
-
-                <div className="mt-4 flex items-center gap-1.5">
-                  <TrendingUp
-                    size={13}
-                    className="text-emerald-600"
-                  />
-                  <span className="text-[11px] font-semibold text-emerald-700">
-                    {stat.trend}
-                  </span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* JOBS + EMPLOYEE OVERVIEW */}
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-
-          {/* RECENT JOBS */}
-          <section className="min-w-0 overflow-hidden rounded-2xl border border-[#E2EBE8] bg-white shadow-[0_3px_16px_rgba(7,27,34,0.035)] xl:col-span-2">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#EDF2F0] px-4 py-4 sm:px-5">
-              <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-teal-50 text-teal-700">
-                  <ClipboardList size={18} />
-                </div>
-
-                <div>
-                  <h3 className="text-[14px] font-bold text-[#092B31]">
-                    Recent Service Jobs
-                  </h3>
-                  <p className="mt-0.5 text-[11px] text-slate-500">
-                    Latest workshop service requests
-                  </p>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => showComingSoon("Job Cards")}
-                className="inline-flex items-center gap-1 text-[11px] font-bold text-teal-700 transition-colors hover:text-teal-900"
-              >
-                View All
-                <ArrowRight size={14} />
-              </button>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[700px] text-left">
-                <thead className="bg-[#F8FBFA]">
-                  <tr className="text-[10px] font-bold uppercase tracking-[0.09em] text-slate-500">
-                    <th className="px-4 py-3 sm:px-5">Job ID</th>
-                    <th className="px-4 py-3">Vehicle</th>
-                    <th className="px-4 py-3">Service</th>
-                    <th className="px-4 py-3">Assigned To</th>
-                    <th className="px-4 py-3">Status</th>
-                  </tr>
-                </thead>
-
-                <tbody className="divide-y divide-[#EDF2F0]">
-                  {jobs.map((job) => (
-                    <tr
-                      key={job.id}
-                      className="transition-colors hover:bg-[#F8FBFA]"
-                    >
-                      <td className="whitespace-nowrap px-4 py-3.5 text-[11px] font-bold text-teal-800 sm:px-5">
-                        {job.id}
-                      </td>
-
-                      <td className="whitespace-nowrap px-4 py-3.5 font-mono text-[11px] text-slate-600">
-                        {job.vehicle}
-                      </td>
-
-                      <td className="px-4 py-3.5 text-[11px] font-medium text-[#18383C]">
-                        {job.service}
-                      </td>
-
-                      <td className="px-4 py-3.5">
-                        <div className="flex items-center gap-2">
-                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#EAF5F2] text-[10px] font-bold text-teal-700">
-                            {job.emp
-                              .split(" ")
-                              .map((name) => name[0])
-                              .join("")}
-                          </div>
-
-                          <span className="whitespace-nowrap text-[11px] font-medium text-slate-700">
-                            {job.emp}
-                          </span>
-                        </div>
-                      </td>
-
-                      <td className="px-4 py-3.5">
-                        <span
-                          className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1 text-[10px] font-bold ${statusStyles[job.tone]}`}
-                        >
-                          <span className="h-1.5 w-1.5 rounded-full bg-current" />
-                          {job.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            <div className="flex items-center justify-between border-t border-[#EDF2F0] bg-[#FCFDFC] px-5 py-3">
-              <span className="text-[10px] text-slate-400">
-                Showing {jobs.length} recent jobs
-              </span>
-
-              <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-teal-700">
-                <Activity size={12} />
-                Workshop activity
-              </span>
-            </div>
-          </section>
-
-          {/* EMPLOYEE OVERVIEW */}
-          <section className="overflow-hidden rounded-2xl border border-[#E2EBE8] bg-white shadow-[0_3px_16px_rgba(7,27,34,0.035)]">
-            <div className="flex items-center gap-3 border-b border-[#EDF2F0] px-4 py-4 sm:px-5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
-                <Users size={18} />
-              </div>
-
-              <div>
-                <h3 className="text-[14px] font-bold text-[#092B31]">
-                  Employee Overview
-                </h3>
-                <p className="mt-0.5 text-[11px] text-slate-500">
-                  Team availability status
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-4 p-4 sm:p-5">
-              {employeeAvailability.map((item) => (
-                <div key={item.label}>
-                  <div className="mb-2 flex items-center justify-between">
-                    <span className="text-[11px] font-medium text-slate-600">
-                      {item.label}
-                    </span>
-
-                    <span className="text-[12px] font-bold text-[#092B31]">
-                      {item.value}
-                    </span>
-                  </div>
-
-                  <div
-                    role="progressbar"
-                    aria-label={item.label}
-                    aria-valuenow={item.pct}
-                    aria-valuemin={0}
-                    aria-valuemax={100}
-                    className="h-[7px] overflow-hidden rounded-full bg-[#EDF3F1]"
-                  >
-                    <div
-                      className={`h-full rounded-full ${item.color}`}
-                      style={{ width: `${item.pct}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-
-              <div className="border-t border-[#EDF2F0] pt-4">
-                <div className="mb-3 flex items-center gap-2">
-                  <Star
-                    size={15}
-                    className="fill-[#D6B77B] text-[#D6B77B]"
-                  />
-                  <h4 className="text-[12px] font-bold text-[#092B31]">
-                    Top Performers
-                  </h4>
-                </div>
-
-                <div className="space-y-2">
-                  {topPerformers.map((person) => (
-                    <div
-                      key={person.name}
-                      className="flex items-center justify-between gap-2 rounded-xl p-2 transition-colors hover:bg-[#F8FBFA]"
-                    >
-                      <div className="flex min-w-0 items-center gap-2.5">
-                        <div
-                          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${person.gradient} text-[10px] font-bold text-white`}
-                        >
-                          {person.initials}
-                        </div>
-
-                        <span className="truncate text-[11px] font-semibold text-slate-700">
-                          {person.name}
-                        </span>
-                      </div>
-
-                      <span className="shrink-0 rounded-lg bg-teal-50 px-2 py-1 text-[10px] font-bold text-teal-700">
-                        {person.jobs} jobs
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => showComingSoon("Employees")}
-                className="flex h-9 w-full items-center justify-center gap-1.5 rounded-xl border border-teal-100 bg-teal-50 text-[11px] font-bold text-teal-700 transition-colors hover:bg-teal-100"
-              >
-                View All Employees
-                <ArrowRight size={14} />
-              </button>
-            </div>
-          </section>
-        </div>
-
-        {/* QUICK ACTIONS */}
-        <section>
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <div>
-              <h3 className="text-[15px] font-bold text-[#092B31]">
-                Quick Actions
-              </h3>
-              <p className="mt-0.5 text-[11px] text-slate-500">
-                Frequently used workshop tools
-              </p>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => showComingSoon("Customize Shortcuts")}
-              className="text-[11px] font-semibold text-teal-700 transition-colors hover:text-teal-900"
-            >
-              Customize
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {quickActions.map((action) => {
-              const Icon = action.icon;
-              const tone = toneMap[action.color];
-
-              const content = (
-                <>
-                  <div className="flex items-start justify-between">
-                    <div
-                      className={`flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br ${tone.gradient} text-white shadow-sm transition-transform duration-200 group-hover:scale-105`}
-                    >
-                      <Icon size={19} />
-                    </div>
-
-                    <ArrowUpRight
-                      size={16}
-                      className="text-slate-300 transition-colors group-hover:text-teal-700"
-                    />
-                  </div>
-
-                  <h3 className="mt-3 text-[11px] font-semibold !text-[#092B31] !no-underline">
-                    {action.title}
-                  </h3>
-
-                  <p className="mt-1 text-[10px] leading-4 text-slate-500">
-                    {action.desc}
-                  </p>
-                </>
-              );
-
-              const className =
-             "group block w-full rounded-2xl border border-[#E2EBE8] bg-white p-4 text-left !text-[#092B31] !no-underline shadow-[0_3px_16px_rgba(7,27,34,0.035)] transition-all duration-200 hover:-translate-y-0.5 hover:border-teal-200 hover:!text-[#092B31] hover:!no-underline hover:shadow-[0_10px_25px_rgba(7,27,34,0.07)]";
-
-              return action.enabled ? (
-                <Link
-                  key={action.title}
-                  to={action.href}
-                  className={className}
-                >
-                  {content}
-                </Link>
-              ) : (
-                <button
-                  key={action.title}
-                  type="button"
-                  onClick={() => showComingSoon(action.title)}
-                  className={className}
-                >
-                  {content}
-                </button>
-              );
-            })}
-          </div>
-        </section>
-
-        {/* BOTTOM INFO CARDS */}
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-
-          {/* SERVICE TIME */}
-          <div className="relative overflow-hidden rounded-2xl border border-[#17464A] bg-gradient-to-br from-[#071B22] via-[#0E3940] to-[#0F5956] p-4 text-white shadow-[0_8px_24px_rgba(7,27,34,0.12)]">
-            <div className="pointer-events-none absolute -right-10 -top-12 h-36 w-36 rounded-full bg-teal-400/10 blur-2xl" />
-
-            <div className="relative">
-              <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/10">
-                <Clock size={18} className="text-teal-200" />
-              </div>
-
-              <p className="text-[11px] font-medium text-teal-100/80">
-                Avg. Service Time
-              </p>
-
-              <p className="mt-1 text-[25px] font-extrabold tracking-tight">
-                2h 34m
-              </p>
-
-              <p className="mt-1.5 flex items-center gap-1 text-[11px] font-semibold text-teal-200">
-                <TrendingUp size={13} />
-                12% faster this month
-              </p>
-            </div>
-          </div>
-
-          {/* STOCK */}
-          <div className="rounded-2xl border border-[#E2EBE8] bg-white p-4 shadow-[0_3px_16px_rgba(7,27,34,0.035)]">
-            <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-xl border border-[#F0E4C9] bg-[#FBF6EB] text-[#A7823D]">
-              <Package size={18} />
-            </div>
-
-            <p className="text-[11px] font-medium text-slate-500">
-              Low Stock Items
-            </p>
-
-            <p className="mt-1 text-[25px] font-extrabold tracking-tight text-[#092B31]">
-              7
-            </p>
-
-            <p className="mt-1.5 text-[11px] font-semibold text-[#A7823D]">
-              Restock recommended
-            </p>
-          </div>
-
-          {/* RATING */}
-          <div className="rounded-2xl border border-[#E2EBE8] bg-white p-4 shadow-[0_3px_16px_rgba(7,27,34,0.035)]">
-            <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-xl border border-teal-100 bg-teal-50 text-teal-700">
-              <Star size={18} />
-            </div>
-
-            <p className="text-[11px] font-medium text-slate-500">
-              Customer Rating
-            </p>
-
-            <p className="mt-1 text-[25px] font-extrabold tracking-tight text-[#092B31]">
-              4.8 <span className="text-sm font-medium text-slate-400">/ 5.0</span>
-            </p>
-
-            <p className="mt-1.5 flex items-center gap-1 text-[11px] text-slate-500">
-              <Sparkles size={12} className="text-[#D6B77B]" />
-              Based on 214 reviews
-            </p>
-          </div>
-        </div>
+import { getMyAssignedJobs } from "../services/partnerService";
+import { getInventory } from "../services/inventoryService";
+
+const panel = "rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5";
+const link = "inline-flex items-center gap-1 text-sm font-semibold !text-teal-700 !no-underline hover:!underline";
+const currency = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" });
+const money = paise => currency.format(paise / 100);
+const dayKey = new Intl.DateTimeFormat("en-CA", {
+  year: "numeric", month: "2-digit", day: "2-digit", timeZone: "Asia/Kolkata",
+});
+
+function PageLink({ to, children }) {
+  return <Link className={link} to={to}>{children}<ArrowUpRight size={15} /></Link>;
+}
+
+function Metric({ label, value, icon: Icon, to }) {
+  return <Link to={to} className={panel + " !text-slate-800 !no-underline hover:border-teal-400"}>
+    <div className="flex items-center justify-between gap-2 text-sm text-slate-600">{label}<Icon size={17} /></div>
+    <strong className="mt-2 block text-2xl tabular-nums">{value}</strong>
+  </Link>;
+}
+
+function PayoutSummary({ jobs, verified }) {
+  const totals = { pendingWork: 0, awaiting: 0, transferred: 0 };
+  let valid = verified;
+  for (const job of jobs) {
+    if (!job.can_start) continue;
+    const paise = job.transferredAt ? Number(job.transferredPaise) : Math.round(Number(job.partner_amount) * 100);
+    if (!Number.isSafeInteger(paise) || paise <= 0) { valid = false; continue; }
+    if (job.transferredAt) totals.transferred += paise;
+    else if (job.status === "completed") totals.awaiting += paise;
+    else totals.pendingWork += paise;
+  }
+  const labels = ["Awaiting payout", "Transferred", "Work pending"];
+  const colors = ["#d59930", "#147970", "#7790a2"];
+  const amounts = [totals.awaiting, totals.transferred, totals.pendingWork];
+  const options = {
+    chart: { sparkline: { enabled: true }, fontFamily: "inherit" },
+    labels, colors, legend: { show: false }, dataLabels: { enabled: false },
+    stroke: { width: 2, colors: ["#fff"] },
+    plotOptions: { pie: { donut: { size: "77%" } } },
+    tooltip: { y: { formatter: value => money(value) } },
+  };
+  return <section className={panel + " min-w-0 self-start"}>
+    <div className="flex items-center justify-between gap-2">
+      <h2 className="!mb-0 !text-base font-semibold">Earnings &amp; payouts</h2>
+      <PageLink to="/partner/payments">Details</PageLink>
+    </div>
+    <p className="mb-2 text-xs text-slate-500">All time · Test mode</p>
+    {!valid ? <p className="text-sm text-slate-500">Payment totals unavailable.</p> :
+      <div className="flex flex-wrap items-center gap-4">
+        {amounts.some(value => value > 0)
+          ? <Chart type="donut" options={options} series={amounts} width={112} height={112}/>
+          : <p className="text-sm text-slate-500">No verified payments yet.</p>}
+        <dl className="m-0 min-w-36 flex-1 space-y-2">
+          {labels.map((label, i) => <div key={label} className="flex items-center justify-between gap-2 text-xs">
+            <dt className="flex items-center gap-2 font-normal text-slate-600">
+              <span className="h-2 w-2 rounded-full" style={{ backgroundColor: colors[i] }}/>{label}
+            </dt>
+            <dd className="m-0 font-semibold tabular-nums">{money(amounts[i])}</dd>
+          </div>)}
+        </dl>
+      </div>}
+  </section>;
+}
+
+function Activity({ jobs }) {
+  const [days, setDays] = useState(7);
+  const counts = new Map();
+  const today = Date.parse(dayKey.format(new Date()) + "T00:00:00Z");
+  for (let offset = days - 1; offset >= 0; offset--) {
+    const key = new Date(today - offset * 86400000).toISOString().slice(0, 10);
+    counts.set(key, 0);
+  }
+  for (const job of jobs) {
+    if (job.status !== "completed" || job.completed_at_ms == null) continue;
+    const date = new Date(Number(job.completed_at_ms));
+    if (!Number.isFinite(date.getTime())) continue;
+    const key = dayKey.format(date);
+    if (counts.has(key)) counts.set(key, counts.get(key) + 1);
+  }
+  const entries = Array.from(counts);
+  const values = entries.map(([, count]) => count);
+  const total = values.reduce((sum, count) => sum + count, 0);
+  const undated = jobs.filter(job => job.status === "completed" && job.completed_at_ms == null).length;
+  const categories = entries.map(([key]) => new Date(key + "T12:00:00Z").toLocaleDateString("en-GB", {
+    day: "numeric", month: "short", timeZone: "Asia/Kolkata",
+  }));
+  const options = { 
+    chart: { toolbar: { show: false }, fontFamily: "inherit", zoom: { enabled: false } },
+    colors: ["#147970"], grid: { borderColor: "#e3ebe8", strokeDashArray: 3 },
+    plotOptions: { bar: { borderRadius: 4, columnWidth: days === 7 ? "38%" : "65%" } },
+    dataLabels: { enabled: false },
+    xaxis: { categories, tickAmount: 6, axisTicks: { show: false } },
+    yaxis: { min: 0, decimalsInFloat: 0, forceNiceScale: true },
+  };
+  return <section className={panel + " min-w-0"}>
+    <div className="flex items-center justify-between gap-2">
+      <h2 className="!mb-0 !text-base font-semibold">Workshop activity</h2>
+      <select aria-label="Activity period" className="rounded-lg border px-2 py-1 text-xs"
+        value={days} onChange={event => setDays(Number(event.target.value))}>
+        <option value={7}>Last 7 days</option><option value={30}>Last 30 days</option>
+      </select>
+    </div>
+    <p className="mb-0 mt-1 text-sm text-slate-600">{total} completed {total === 1 ? "job" : "jobs"} in this period</p>
+    {total > 0 ? <Chart type="bar" height={160} options={options} series={[{ name: "Completed jobs", data: values }]}/>
+      : <p className="my-4 rounded-lg bg-slate-50 p-3 text-sm text-slate-600">No dated completions in the selected period.</p>}
+    {undated > 0 && <p className="mb-0 text-xs text-amber-800">Completed jobs with no recorded date: {undated}.</p>}
+  </section>;
+}
+
+function jobStage(job) {
+  if (job.status === "in_progress") return "In service";
+  if (job.can_start) return "Paid · Awaiting start";
+  if (!Number(job.has_active_quote)) return "Estimate required";
+  return "Quote submitted";
+}
+
+export default function Dashboard() {
+  const [jobs, setJobs] = useState(null);
+  const [items, setItems] = useState(null);
+  const [errors, setErrors] = useState({});
+  const [refresh, setRefresh] = useState(0);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    let active = true;
+    const controller = new AbortController();
+    async function load() {
+      setLoading(true);
+      const [work, stock] = await Promise.allSettled([getMyAssignedJobs(), getInventory(controller.signal)]);
+      if (!active) return;
+      setJobs(work.status === "fulfilled" ? work.value.data : null);
+      setItems(stock.status === "fulfilled" ? stock.value : null);
+      setErrors({ jobs: work.status === "rejected", inventory: stock.status === "rejected" });
+      setLoading(false);
+    }
+    load();
+    return () => { active = false; controller.abort(); };
+  }, [refresh]);
+
+  const work = jobs || [];
+  const assigned = work.filter(job => job.status === "assigned");
+  const quotes = assigned.filter(job => !Number(job.has_active_quote));
+  const verified = jobs !== null && work.every(job => job.payment_status_available !== false);
+  const paid = assigned.filter(job => job.can_start);
+  const ongoing = work.filter(job => job.status === "in_progress");
+  const queue = [...quotes, ...paid, ...ongoing, ...assigned.filter(job => Number(job.has_active_quote) && !job.can_start)];
+  const low = (items || []).filter(item => Number(item.quantity) <= Number(item.low_stock_level))
+    .sort((a, b) => Number(a.quantity) - Number(b.quantity));
+
+  return <Layout activePath="/dashboard"><main className="mx-auto max-w-7xl space-y-4 text-slate-800">
+    <header className="flex items-center justify-between gap-2">
+      <h3 className="text-2xl font-semibold tracking-tight">Garage overview</h3>
+      <div className="flex flex-wrap items-center gap-3"><PageLink to="/partner/jobs">Open job cards</PageLink>
+      <button disabled={loading} onClick={() => setRefresh(n => n + 1)} className="inline-flex items-center gap-2 rounded-lg border bg-white px-3 py-2 text-sm disabled:opacity-50">
+        <RefreshCw size={14}/>{loading ? "Loading…" : "Refresh"}
+      </button>
       </div>
-    </Layout>
-  );
-};
+    </header>
+    {errors.jobs && <p role="alert">Job data unavailable. Use Refresh to retry.</p>}
+    {errors.inventory && <p role="alert">Inventory unavailable. Use Refresh to retry.</p>}
+    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <Metric label="Quotes to send" value={jobs ? quotes.length : "—"} icon={ClipboardList} to="/partner/jobs"/>
+      <Metric label="Paid · Awaiting start" value={verified ? paid.length : "—"} icon={Wallet} to="/partner/jobs"/>
+      <Metric label="In service" value={jobs ? ongoing.length : "—"} icon={Wrench} to="/partner/jobs"/>
+      <Metric label="Low-stock items" value={items ? low.length : "—"} icon={Package} to="/partner/inventory"/>
+    </div>
 
-export default Dashboard;
+    {jobs && <section className={panel}>
+      <div className="flex items-center justify-between gap-2"><h4 className="font-semibold">Jobs needing action</h4><PageLink to="/partner/jobs">View all jobs</PageLink></div>
+      {queue.length === 0 ? <p className="mt-4 text-sm text-slate-500">No open jobs.</p> :
+      <div className="mt-3 overflow-x-auto"><table className="w-full min-w-[440px] text-left text-sm">
+        <thead className="bg-slate-50 text-xs text-slate-600"><tr>{["Vehicle / Job", "Service", "Current stage", "Action"].map(h => <th key={h} className="p-2">{h}</th>)}</tr></thead>
+        <tbody>{queue.slice(0, 5).map(job => <tr key={job.request_id} className="border-t border-slate-100">
+          <td className="p-2"><strong>{job.vehicle_number}</strong><small className="block text-slate-500">{job.request_code}</small></td>
+          <td className="p-2">{job.service_name}</td><td className="p-2">{jobStage(job)}</td>
+          <td className="p-2"><PageLink to={"/partner/jobs?request=" + job.request_id + (jobStage(job) === "Estimate required" ? "&action=quote" : "")}>
+            {jobStage(job) === "Estimate required" ? "Send quote" : "Open job"}
+          </PageLink></td>
+        </tr>)}</tbody></table></div>}
+    </section>}
+    <div className="grid gap-4 xl:grid-cols-[1.35fr_1fr_1fr]">
+      {jobs && <Activity jobs={jobs}/>}
+      {items && <section className={panel}>
+        <div className="flex items-center justify-between"><h4 className="font-semibold">Inventory alerts</h4><PageLink to="/partner/inventory">Inventory</PageLink></div>
+        {low.length === 0 && <p className="mt-4 text-sm text-slate-500">No low-stock items.</p>}
+        {low.slice(0, 5).map(item => <div key={item.item_id} className="flex items-center justify-between gap-2 border-b border-slate-100 py-3 text-sm">
+          <span>{item.name}</span><span className="rounded bg-amber-50 px-2 py-1 text-amber-900">{Number(item.quantity)} {item.unit} left</span><PageLink to={"/partner/inventory?stock=" + item.item_id}>Add stock</PageLink>
+        </div>)}
+      </section>}
+    {jobs && <PayoutSummary jobs={jobs} verified={verified}/>}
+    </div>
+
+  </main></Layout>;
+}

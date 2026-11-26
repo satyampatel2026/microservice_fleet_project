@@ -204,7 +204,9 @@ const updateLocation = async (req, res) => {
       $set: {
         "latestLocation.latitude": latitude,
         "latestLocation.longitude": longitude,
-        "latestLocation.accuracy": accuracy
+        "latestLocation.accuracy": accuracy,
+        "latestLocation.speed":
+        Number.isFinite(req.body.speed) && req.body.speed >= 0 ? req.body.speed : null,
       },
       $currentDate: {
         "latestLocation.receivedAt": true

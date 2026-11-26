@@ -13,7 +13,7 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
-  Globe2,
+  Globe2,FileText
 } from "lucide-react";
 
 const workspaceLinks = [
@@ -26,11 +26,8 @@ const workspaceLinks = [
   { label: "My Vehicles", path: "/client/vehicles", icon: Truck },
   {label: "My Drivers", path: "/client/drivers", icon:UserRound},
   {label: "My Trips", path: "/client/trips", icon: CalendarDays,},
-  {
-    label: "Explore Services",
-    path: "/client/services",
-    icon: Wrench,
-  },
+  {label: "Explore Services",path: "/client/services",icon: Wrench,},
+  {label: "Reports",path: "/client/reports",icon: FileText,},
 ];
 
 const accountLinks = [
@@ -38,11 +35,6 @@ const accountLinks = [
     label: "My Profile",
     path: "/client/profile",
     icon: UserRound,
-  },
-  {
-    label: "Settings",
-    path: "/client/settings",
-    icon: Settings,
   },
 ];
 

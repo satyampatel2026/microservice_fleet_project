@@ -13,6 +13,9 @@ import ClientsPage from "./pages/clients/ClientsPage";
 import AdminProfile from "./pages/admin/AdminProfile";
 import AdminTracking from "./pages/clients/AdminTracking";
 import ServiceRequests from "./pages/admin/ServiceRequests";
+// import FinanceSettings from "./pages/admin/FinanceSettings";
+import AdminSettings from "./pages/admin/AdminSettings";
+import AdminPayouts from "./pages/admin/AdminPayouts";
 
 function App() {
   return <Routes>
@@ -32,6 +35,9 @@ function App() {
           <Route path="clients" element={<ClientsPage />} />
           <Route path="tracking" element={<AdminTracking/>}/>
           <Route path="service-requests" element={<ServiceRequests/>}/>
+          <Route path="settings" element={<AdminSettings />} />
+          <Route path="payouts" element={<AdminPayouts />} />
+          <Route path="finance" element={<Navigate to="/admin/settings" replace />} />
           <Route path="verification" element={<Navigate to="/admin/clients" replace />} />
         </Route>
       </Route>

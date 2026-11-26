@@ -27,3 +27,13 @@ export const createServiceRequest=data=>
 
 export const cancelServiceRequest=requestId =>
     request(`/${requestId}/cancel`,{method:"PATCH"});
+
+export const getServiceRequestQuote = (requestId) =>
+  request(`/${requestId}/quote`);
+
+export function decideServiceRequestQuote(requestId, quoteId, decision, shownSubtotal) {
+  return request(`/${requestId}/quotes/${quoteId}/decision`, {
+    method: "PATCH",
+    body: { decision, shownSubtotal },
+  });
+}

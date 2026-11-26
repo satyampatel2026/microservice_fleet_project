@@ -23,6 +23,7 @@ import ClientDrivers from "./pages/client/ClientDrivers";
 import VehicleTracking from "./pages/client/VehicleTracking";
 import ClientTrips from "./pages/client/ClientTrips";
 import ClientServiceRequests from "./pages/client/ClientServiceRequests";
+import ClientReports from "./pages/client/ClientReports";
 
 function Home() {
   return (
@@ -61,6 +62,7 @@ export default function App() {
       <Route path="drivers" element={<ClientDrivers/>}/>
       <Route path="trips"  element={<ClientTrips/>}/>
       <Route path="services" element={<ClientServiceRequests/>}/>
+      <Route path="reports" element={<ClientReports />} />
   </Route>
 </Route>
 

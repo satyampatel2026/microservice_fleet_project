@@ -185,3 +185,11 @@ export function markPartnerNotificationRead(notificationId) {
     { method: "PATCH" }
   );
 }
+
+export function sendJobQuote(requestId, serviceAmount, workDetails) {
+  return request(`${AUTH_URL}/jobs/${requestId}/quotes`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ serviceAmount, workDetails }),
+  });
+}

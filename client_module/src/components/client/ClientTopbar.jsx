@@ -8,7 +8,6 @@ import {
   ChevronDown,
   ChevronRight,
   UserRound,
-  Settings,
   LogOut,
   X,
 } from "lucide-react";
@@ -20,7 +19,6 @@ const pageTitles = {
   services: "Explore Services",
   bookings: "My Bookings",
   profile: "My Profile",
-  settings: "Settings",
 };
 
 export default function ClientTopbar({ setMobileOpen, client }) {
@@ -149,15 +147,6 @@ export default function ClientTopbar({ setMobileOpen, client }) {
                 >
                   <UserRound size={17} />
                   My Profile
-                </Link>
-
-                <Link
-                  to="/client/settings"
-                  onClick={() => setProfileOpen(false)}
-                  className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-gray-300 transition hover:bg-white/5 hover:text-white"
-                >
-                  <Settings size={17} />
-                  Settings
                 </Link>
 
                 <Link

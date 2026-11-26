@@ -3,23 +3,8 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { logoutPartner, getPartnerProfile } from "../services/partnerService";
 import PartnerNotificationBell from "./PartnerNotificationBell";
-import {
-  UserRound,
-  Menu,
-  Search,
-  Bell,
-  MessageSquare,
-  ChevronDown,
-  Plus,
-  LogOut,
-  CheckCircle2,
-  AlertCircle,
-  X,
-  ShieldCheck,
-  BriefcaseBusiness,
-  ArrowUpRight,
-  Loader2,
-} from "lucide-react";
+import {UserRound,Menu,Search,MessageSquare,ChevronDown,Plus,LogOut,CheckCircle2,AlertCircle,X,ShieldCheck,BriefcaseBusiness,
+  ArrowUpRight,Loader2,} from "lucide-react";
 
 const Navbar = ({ onMenuClick }) => {
   const navigate = useNavigate();
@@ -250,29 +235,10 @@ const Navbar = ({ onMenuClick }) => {
                 aria-label="Search workspace"
                 className="min-w-0 w-full bg-transparent text-xs text-slate-700 outline-none placeholder:text-slate-400"
               />
-            </div>
-
-            {/* MESSAGES */}
-            <button
-              type="button"
-              aria-label="Messages"
-              title="Messages"
-              className="flex h-9 w-9 items-center justify-center rounded-xl text-slate-500 transition-all duration-200 hover:bg-teal-50 hover:text-teal-700"
-            >
-              <MessageSquare size={18} strokeWidth={1.8} />
-            </button>
+            </div>           
 
             {/* NOTIFICATIONS */}
           <PartnerNotificationBell />
-
-            {/* NEW JOB - visual only, route not supplied */}
-            <button
-              type="button"
-              className="ml-1 hidden h-9 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-[#0E3940] to-[#0F766E] px-3.5 text-[11px] font-bold text-white shadow-[0_5px_15px_rgba(15,118,110,0.16)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(15,118,110,0.24)] sm:flex"
-            >
-              <Plus size={15} />
-              New Job
-            </button>
 
             <div className="mx-1.5 hidden h-6 w-px bg-[#E4ECEA] md:block" />
 

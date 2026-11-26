@@ -1,19 +1,15 @@
+import { useRef as useActionRef } from "react";
 import { useEffect, useMemo, useState } from "react";
-import {
-  BriefcaseBusiness,
-  CheckCircle2,
-  ChevronLeft,
-  ChevronRight,
-  Clock3,
-  RefreshCw,
-  Search,
-  XCircle,
-} from "lucide-react";
+import {BriefcaseBusiness,CheckCircle2,ChevronLeft,ChevronRight,Clock3,RefreshCw,Search,XCircle,} from "lucide-react";
 import Swal from "sweetalert2";
 import Layout from "../layouts/Layout";
-import {declineMyJob,getMyAssignedJobs,updateMyJobStatus,} from "../services/partnerService";
+import recordJobPart from "../components/recordJobPart";
+import {declineMyJob,getMyAssignedJobs,updateMyJobStatus,sendJobQuote} from "../services/partnerService";
 
 const PAGE_SIZE = 10;
+const PAYMENT_REFRESH_MS = 15000;
+
+const actionButton = "inline-flex min-h-7 items-center justify-center rounded-md px-2 text-[11px] font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
 
 const statusStyles = {
   assigned: "border-sky-100 bg-sky-50 text-sky-700",
@@ -60,6 +56,7 @@ function SummaryCard({ title, value, Icon, iconClass }) {
 }
 
 export default function JobCards() {
+  const dashboardRequest = useActionRef(new URLSearchParams(window.location.search));
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -73,33 +70,65 @@ export default function JobCards() {
 
   useEffect(() => {
     let active = true;
+    let requestInProgress = false;
+    let waitingForPayment = false;
 
-    async function loadJobs() {
-      setLoading(true);
-      setError("");
+    async function loadJobs(showLoading) {
+      if (requestInProgress) return;
+      requestInProgress = true;
+
+      if (showLoading) {
+        setLoading(true);
+        setError("");
+      }
 
       try {
         const response = await getMyAssignedJobs();
-        const rows = Array.isArray(response.data)
-          ? response.data
-          : Array.isArray(response.data?.jobs)
-            ? response.data.jobs
-            : [];
+        let rows = [];
 
-        if (active) setJobs(rows);
+        if (Array.isArray(response.data)) {
+          rows = response.data;
+        } else if (Array.isArray(response.data?.jobs)) {
+          rows = response.data.jobs;
+        }
+
+        if (!active) return;
+
+        setJobs(rows);
+        const params = dashboardRequest.current;
+        if (params.has("request")) {
+          const target = rows.find(row => String(row.request_id) === params.get("request"));
+          const openQuote = params.get("action") === "quote";
+          dashboardRequest.current = new URLSearchParams();
+          if (target) {
+            setSearch(target.request_code || target.vehicle_number);
+            if (openQuote && getStatus(target) === "assigned" && !Number(target.has_active_quote)) quoteJob(target);
+          }
+        }
+        waitingForPayment = rows.some((job) =>
+          getStatus(job) === "assigned" && Number(job.has_active_quote) === 1 && !job.can_start
+        );
       } catch (loadError) {
-        if (active) {
+        if (active && showLoading) {
           setError(loadError.message || "Unable to load jobs.");
         }
       } finally {
-        if (active) setLoading(false);
+        requestInProgress = false;
+        if (active && showLoading) setLoading(false);
       }
     }
 
-    loadJobs();
+    loadJobs(true);
+
+    const timer = setInterval(() => {
+      if (waitingForPayment && document.visibilityState === "visible") {
+        loadJobs(false);
+      }
+    }, PAYMENT_REFRESH_MS);
 
     return () => {
       active = false;
+      clearInterval(timer);
     };
   }, [reload]);
 
@@ -248,6 +277,99 @@ export default function JobCards() {
       setBusyJobId(null);
     }
   }
+  async function quoteJob(job) {
+    const answer = await Swal.fire({
+      title: "Create service quotation",
+      width: 520,
+      html: `
+        <div class="space-y-4 text-left text-sm text-slate-700">
+          <div class="rounded-lg border border-teal-100 bg-teal-50 px-4 py-3">
+            <p id="quote-service" class="font-semibold text-teal-950"></p>
+            <p id="quote-request" class="mt-1 text-xs text-teal-800"></p>
+          </div>
+
+          <div>
+            <label for="quote-amount" class="mb-1.5 block font-semibold text-slate-900">
+              Quoted service amount
+            </label>
+            <div class="flex items-center rounded-lg border border-slate-300 bg-white focus-within:border-teal-600">
+              <span class="border-r border-slate-200 px-3 text-xs font-semibold text-slate-600">INR</span>
+              <input id="quote-amount" type="number" inputmode="decimal"
+                     min="0.01" max="99999999.99" step="0.01" required
+                     placeholder="0.00"
+                     class="w-full rounded-r-lg bg-transparent px-3 py-2.5 outline-none">
+            </div>
+          </div>
+
+          <div>
+            <label for="quote-details" class="mb-1.5 block font-semibold text-slate-900">
+              Scope of work
+            </label>
+            <textarea id="quote-details" rows="4" maxlength="1000" required
+                      placeholder="List the work, parts and labour included in your quote."
+                      class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 outline-none focus:border-teal-600"></textarea>
+          </div>
+
+          <p class="text-xs text-slate-600">The client will review this quotation before approving the work.</p>
+        </div>
+      `,
+      didOpen: (popup) => {
+        popup.querySelector("#quote-service").textContent = job.service_name || "Vehicle service";
+        popup.querySelector("#quote-request").textContent =
+          [job.request_code, job.vehicle_number].filter(Boolean).join(" · ");
+        popup.querySelector("#quote-amount").focus();
+      },
+      focusConfirm: false,
+      showCancelButton: true,
+      cancelButtonText: "Cancel",
+      confirmButtonText: "Send quotation",
+      confirmButtonColor: "#0F766E",
+      showLoaderOnConfirm: true,
+      allowOutsideClick: () => !Swal.isLoading(),
+      allowEscapeKey: () => !Swal.isLoading(),
+      preConfirm: async () => {
+        const popup = Swal.getPopup();
+        const amountInput = popup.querySelector("#quote-amount");
+        const details = popup.querySelector("#quote-details").value.trim();
+
+        if (!amountInput.checkValidity()) {
+          Swal.showValidationMessage("Enter a valid quoted amount with up to two decimal places.");
+          amountInput.focus();
+          return false;
+        }
+
+        if (!details) {
+          Swal.showValidationMessage("Describe the work included in the quotation.");
+          popup.querySelector("#quote-details").focus();
+          return false;
+        }
+
+        setBusyJobId(job.request_id);
+
+        try {
+          await sendJobQuote(job.request_id, Number(amountInput.value), details);
+          return true;
+        } catch (error) {
+          Swal.showValidationMessage("Unable to send the quotation. Please check the details and try again.");
+          return false;
+        } finally {
+          setBusyJobId(null);
+        }
+      },
+    });
+
+    if (!answer.isConfirmed) return;
+
+    setReload((value) => value + 1);
+    await Swal.fire({
+      toast: true,
+      position: "top-end",
+      icon: "success",
+      title: "Quotation sent to client",
+      showConfirmButton: false,
+      timer: 2200,
+    });
+  }
 
   return (
     <Layout activePath="/partner/jobs">
@@ -390,7 +512,7 @@ export default function JobCards() {
                         <option value="declined">Declined</option>
                       </select>
                     </th>
-                    <th className="px-4 py-3">Actions</th>
+                    <th className="w-[1%] whitespace-nowrap px-3 py-3">Actions</th>
                   </tr>
                 </thead>
 
@@ -419,6 +541,8 @@ export default function JobCards() {
                     visibleJobs.map((job, index) => {
                       const status = getStatus(job);
                       const busy = busyJobId === job.request_id;
+                      const paymentConfirmed = job.can_start === true;
+                      const hasQuote = Number(job.has_active_quote) === 1;
 
                       return (
                         <tr
@@ -462,47 +586,74 @@ export default function JobCards() {
                             >
                               {status.replaceAll("_", " ")}
                             </span>
+                            {paymentConfirmed && (
+                              <span className="mt-1 flex w-fit items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-800">
+                                <CheckCircle2 size={11} aria-hidden="true" />
+                                Paid
+                              </span>
+                            )}
+                            {status === "assigned" && !paymentConfirmed && hasQuote && (
+                              <span className="mt-1 block text-[11px] text-amber-800">
+                                Awaiting payment
+                              </span>
+                            )}
                           </td>
-                          <td className="whitespace-nowrap px-4 py-3.5">
-                            <div className="flex gap-1.5">
-                              {(status === "assigned" ||
-                                status === "in_progress") && (
+                          <td className="w-[1%] whitespace-nowrap px-3 py-3">
+                            <div className="flex items-center gap-1.5">
+                              {status === "assigned" && paymentConfirmed && (
+                                <button
+                                  type="button"
+                                  disabled={busy}
+                                  onClick={() => updateJob(job, "in_progress")}
+                                  className={actionButton + " bg-teal-700 text-white hover:bg-teal-800"}
+                                >
+                                  Start job
+                                </button>
+                              )}
+
+                              {status === "assigned" && !paymentConfirmed && !hasQuote && (
+                                <button
+                                  type="button"
+                                  disabled={busy}
+                                  onClick={() => quoteJob(job)}
+                                  className={actionButton + " bg-teal-700 text-white hover:bg-teal-800"}
+                                >
+                                  Send quote
+                                </button>
+                              )}
+
+                              {(status === "assigned" || status === "in_progress") && (
                                 <button
                                   type="button"
                                   disabled={busy}
                                   onClick={() => declineJob(job)}
-                                  className="rounded-lg border border-red-200 px-2.5 py-1.5 text-[10px] font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50"
+                                  className={actionButton + " text-rose-700 hover:bg-rose-50"}
                                 >
                                   Decline
                                 </button>
                               )}
-                              {status === "assigned" && (
-                                <button
-                                  type="button"
-                                  disabled={busy}
-                                  onClick={() =>
-                                    updateJob(job, "in_progress")
-                                  }
-                                  className="rounded-lg bg-teal-700 px-2.5 py-1.5 text-[10px] font-semibold text-white hover:bg-teal-800 disabled:opacity-50"
-                                >
-                                  Start
-                                </button>
-                              )}
+
                               {status === "in_progress" && (
-                                <button
-                                  type="button"
-                                  disabled={busy}
-                                  onClick={() => updateJob(job, "completed")}
-                                  className="rounded-lg bg-emerald-700 px-2.5 py-1.5 text-[10px] font-semibold text-white hover:bg-emerald-800 disabled:opacity-50"
-                                >
-                                  Complete
-                                </button>
-                              )}
-                              {busy && (
-                                <span className="self-center text-[10px] text-slate-400">
-                                  Updating...
-                                </span>
-                              )}
+  <>
+    <button
+      type="button"
+      disabled={busy}
+      onClick={() => recordJobPart(job)}
+      className={actionButton + " border border-teal-200 text-teal-700 hover:bg-teal-50"}
+    >
+      Use part
+    </button>
+
+    <button
+      type="button"
+      disabled={busy}
+      onClick={() => updateJob(job, "completed")}
+      className={actionButton + " bg-emerald-700 text-white hover:bg-emerald-800"}
+    >
+      Complete
+    </button>
+  </>
+)}
                             </div>
                           </td>
                         </tr>

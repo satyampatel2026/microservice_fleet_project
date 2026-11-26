@@ -97,6 +97,7 @@ app.use(
     "/api/admin/verification",
     "/api/admin/service-requests",
     "/api/admin/notifications",
+    "/api/admin/finance",
   ],
   proxyTo(process.env.USER_SERVICE_URL)
 );
@@ -126,6 +127,12 @@ app.use(
  "/api/client/notifications",
 ],
   proxyTo(process.env.CLIENT_SERVICE_URL)
+);
+
+// PAYMENT SERVICE PORT-5006
+app.use(
+  "/api/client/payments",
+  proxyTo(process.env.PAYMENT_SERVICE_URL || "http://localhost:5006")
 );
 
 const PORT = process.env.PORT || 5000;

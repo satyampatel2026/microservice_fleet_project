@@ -36,7 +36,7 @@ const navItems = [{
   to: "/admin/partnerspage",
   label: "Partners Management",
   icon: Handshake
-}, {
+},{
   to: "/admin/clients",
   label: "Clients Management",
   icon: UsersRound

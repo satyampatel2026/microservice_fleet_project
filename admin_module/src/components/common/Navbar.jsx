@@ -10,8 +10,6 @@ import {
   FiSearch,
   FiSettings,
   FiUser,
-  FiMoon,
-  FiSun,
 } from "react-icons/fi";
 import Swal from "sweetalert2";
 
@@ -25,11 +23,7 @@ const Toast = Swal.mixin({
   timerProgressBar: true,
 });
 
-export default function Navbar({
-  onMenuClick,
-  dark,
-  onToggleTheme,
-}) {
+export default function Navbar({onMenuClick}) {
   const [profileOpen, setProfileOpen] = useState(false);
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
@@ -161,12 +155,6 @@ export default function Navbar({
             <FiSearch size={18} />
           </button>
 
-          {/* Sun = Light, Moon = Dark. Dono buttons hamesha visible hain. */}
-          <div className="flex items-center gap-0.5 rounded-lg border border-slate-200 p-0.5 dark:border-white/10" role="group" aria-label="Colour mode">
-            <button type="button" onClick={() => { if (dark) onToggleTheme(); }} aria-label="Light mode" title="Light mode" aria-pressed={!dark} className={`flex h-8 w-8 items-center justify-center rounded-md transition ${!dark ? "theme-mode-active" : "text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5"}`}><FiSun size={17} /></button>
-            <button type="button" onClick={() => { if (!dark) onToggleTheme(); }} aria-label="Dark mode" title="Dark mode" aria-pressed={dark} className={`flex h-8 w-8 items-center justify-center rounded-md transition ${dark ? "theme-mode-active" : "text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5"}`}><FiMoon size={17} /></button>
-          </div>
-
           {/* Notifications */}
           <button
             type="button"
@@ -231,6 +219,7 @@ export default function Navbar({
 
                 <button
                   type="button"
+                  onClick={() => {setProfileOpen(false); navigate("/admin/settings"); }}
                   className="flex w-full items-center gap-2 px-3 py-2 text-xs text-slate-600 transition hover:bg-violet-50 hover:text-violet-600 dark:text-slate-300 dark:hover:bg-white/[0.05] dark:hover:text-violet-300"
                 >
                   <FiSettings size={14} />

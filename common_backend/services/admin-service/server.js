@@ -15,6 +15,7 @@ const adminProfileRouter = require("./src/routes/adminProfileRoute");
 const adminVehicleBusinessRouter = require("./src/routes/adminVehicleBusinessRoute");
 const serviceRequestRouter = require("./src/routes/serviceRequestRoute");
 const adminNotificationRoutes = require("./src/routes/adminNotificationRoutes");
+const financeCommissionRouter = require("./src/routes/financeCommissionRoute");
 
 const app = express();
 const PORT = process.env.SERVER_PORT || 5002;
@@ -43,6 +44,7 @@ app.use("/", adminVehicleBusinessRouter);
 app.use("/", adminProfileRouter);
 app.use("/",serviceRequestRouter);
 app.use(adminNotificationRoutes);
+app.use(financeCommissionRouter);
 // ================= SERVER =================
 
 app.listen(PORT, () => {

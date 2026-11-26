@@ -9,6 +9,8 @@ import MyServices from "./pages/MyServices";
 import Employees from "./pages/Employees";
 import PartnerProfile from "./pages/PartnerProfile";
 import JobCards from "./pages/JobCards";
+import Inventory from "./pages/Inventory";
+import PartnerPayments from "./pages/PartnerPayments";
 
 function App() {
   return (
@@ -26,6 +28,8 @@ function App() {
         <Route path="/partner/services" element={<MyServices />} />
         <Route path="/partner/employees" element={<Employees />} />
         <Route path="/partner/jobs" element={<JobCards />} />
+        <Route path="/partner/inventory" element={<Inventory />} />
+        <Route path="/partner/payments" element={<PartnerPayments />} />
       </Route>
 
       {/* Catch-all route */}

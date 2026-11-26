@@ -12,11 +12,13 @@
   "dependencies": {
     "@marsidev/react-turnstile": "^1.6.2",
     "@tailwindcss/vite": "^4.3.3",
+    "apexcharts": "^8.9.1",
     "bootstrap": "^5.3.8",
     "firebase": "^13.4.0",
     "formik": "^2.4.9",
     "lucide-react": "^1.45.0",
     "react": "^19.2.8",
+    "react-apexcharts": "^2.2.1",
     "react-dom": "^19.2.8",
     "react-router-dom": "^7.18.3",
     "sweetalert2": "^11.26.25",

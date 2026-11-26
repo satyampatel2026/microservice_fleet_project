@@ -8,11 +8,16 @@ const {getServiceRequestsForAdmin,getServiceRequestForAdmin ,assignServiceReques
 const {getAssignedServiceRequestsForPartner,declinePartnerJob,updatePartnerJobStatus}=require("../controllers/partnerServiceRequestController");
 const {createWelcomeNotificationForClient,sendAdminNotificationToClient,createBroadcastNotificationForAllClients
 } = require("../controllers/internalClientNotificationController");
+const { createServiceQuote } = require("../controllers/serviceQuoteWriteController");
+const {getAcceptedQuoteForPayment}=require("../controllers/serviceQuoteReadController");
+const { getPayoutQuote } = require("../controllers/partnerPayoutQuoteController");
 
-
+//client activation and profile completion
 internalClientRouter.post("/internal/clients",internalServiceMiddleware,createClient );
 internalClientRouter.get("/internal/clients/:clientId/profile",internalServiceMiddleware, getClientProfile);
 internalClientRouter.patch("/internal/clients/:clientId/activate",internalServiceMiddleware,activateClient);
+
+//admin client,vehicle controll routes
 internalClientRouter.get("/internal/clients",internalServiceMiddleware,getClients);
 internalClientRouter.get("/internal/clients/:clientId/details",internalServiceMiddleware,getClientDetails);
 internalClientRouter.patch("/internal/clients/:clientId/status",internalServiceMiddleware,updateClientStatus);
@@ -33,5 +38,13 @@ internalClientRouter.patch("/internal/partners/:partnerId/service-requests/:requ
 internalClientRouter.post("/internal/clients/:clientId/notifications",internalServiceMiddleware,createWelcomeNotificationForClient);
 internalClientRouter.post("/internal/clients/:clientId/admin-notifications",internalServiceMiddleware,sendAdminNotificationToClient);
 internalClientRouter.post("/internal/notifications/broadcast",internalServiceMiddleware,createBroadcastNotificationForAllClients);
+
+//partner create service quote
+internalClientRouter.post("/internal/partners/:partnerId/service-requests/:requestId/quotes",internalServiceMiddleware,createServiceQuote);
+internalClientRouter.get("/internal/clients/:clientId/payment-quotes/:quoteId",internalServiceMiddleware,getAcceptedQuoteForPayment);
+
+//partner payment route
+internalClientRouter.get("/internal/payout-quotes/:quoteId",internalServiceMiddleware,getPayoutQuote);
+internalClientRouter.get("/internal/finance/payouts", internalServiceMiddleware, require("../controllers/partnerPayoutQuoteController").listPayouts);
 
 module.exports = internalClientRouter;

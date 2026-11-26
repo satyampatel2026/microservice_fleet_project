@@ -1,20 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
-import {
-  ChevronLeft,
-  ChevronRight,
-  RefreshCw,
-  Search,
-  Send,
-  Wrench,
-  X,
-} from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import {ChevronLeft,ChevronRight,RefreshCw,Search,Send,Wrench,X,} from "lucide-react";
 import Swal from "sweetalert2";
-import {
-  cancelServiceRequest,
-  createServiceRequest,
-  getMyServiceRequests,
-  getServiceRequestOptions,
-} from "../../services/serviceRequestService";
+import {cancelServiceRequest,createServiceRequest,getMyServiceRequests,getServiceRequestOptions,getServiceRequestQuote,
+  decideServiceRequestQuote} from "../../services/serviceRequestService";
+import { getPaidOrderWorkshop, payForQuote, paymentReceiptUrl } from "../../services/paymentService";
 
 const todayInIndia = () =>
   new Date(Date.now() + 330 * 60 * 1000).toISOString().slice(0, 10);
@@ -71,11 +60,15 @@ export default function ClientServiceRequests() {
   const [cancellingId, setCancellingId] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
 
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(() => {
+  const params = new URLSearchParams(window.location.search);
+  return params.get("request") || ""; });
   const [serviceFilter, setServiceFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
   const [page, setPage] = useState(1);
+  const [payingRequestId, setPayingRequestId] = useState(null);
+  const paymentInProgress = useRef(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -285,13 +278,157 @@ export default function ClientServiceRequests() {
       setCancellingId(null);
     }
   }
-
+ 
   function resetFilters() {
     setSearch("");
     setServiceFilter("all");
     setStatusFilter("all");
     setPriorityFilter("all");
     setPage(1);
+  }
+  async function handlePayNow(requestId, quoteId) {
+    if (paymentInProgress.current) return;
+
+    paymentInProgress.current = true;
+    setPayingRequestId(requestId);
+
+    try {
+      const payment = await payForQuote(quoteId);
+
+      if (payment.status === "paid") {
+        setRequests((current) => current.map((request) => {
+          if (request.request_id !== requestId) return request;
+          return { ...request, paidOrderId: payment.orderId };
+        }));
+        setReload((value) => value + 1);
+        await showPaidWorkshop(payment.orderId, true);
+        return;
+      }
+      const failed = payment.gatewayStatus === "TXN_FAILURE";
+      await Swal.fire({
+        icon: failed ? "warning" : "info",
+        title: failed ? "Payment unsuccessful" : "Payment not confirmed yet",
+        text: failed
+          ? "Use Pay Now in the request row to try again."
+          : "Refresh the requests list to check whether payment was confirmed.",
+      });
+    } catch (error) {
+      await Swal.fire({
+        icon: "error",
+        title: "Unable to complete checkout",
+        text: error.message,
+      });
+    } finally {
+      paymentInProgress.current = false;
+      setPayingRequestId(null);
+    }
+  }
+
+  async function showPaidWorkshop(orderId, justPaid = false) {
+  try {
+    const workshop = await getPaidOrderWorkshop(orderId);
+
+    await Swal.fire({
+      icon: justPaid ? "success" : "info",
+      title: justPaid ? "Payment confirmed" : "Vehicle Drop-off",
+      text: `Please take your vehicle to the partner workshop below for service.
+
+Workshop name: ${workshop.businessName}
+Address: ${workshop.businessAddress}`,
+      customClass: {
+        htmlContainer: "whitespace-pre-line text-left",
+      },
+      confirmButtonText: "Done",
+    });
+  } catch (error) {
+    await Swal.fire({
+      icon: justPaid ? "success" : "warning",
+      title: justPaid ? "Payment confirmed" : "Drop-off details unavailable",
+      text: "Please open Drop-off details again in a moment.",
+      confirmButtonText: "Close",
+    });
+  }
+}
+
+  async function handleViewQuote(requestId) {
+    if (payingRequestId !== null) return;
+
+    const currency = new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+    });
+
+    try {
+      const { quote, preview } = await getServiceRequestQuote(requestId);
+
+      if (!quote) {
+        await Swal.fire({
+          icon: "info",
+          title: "Quote pending",
+          text: "The assigned partner has not sent an estimate yet.",
+        });
+        return;
+      }
+
+      const isPending = quote.status === "pending";
+      const isAccepted = quote.status === "accepted";
+      const answer = await Swal.fire({
+        title: isAccepted ? "Quote accepted" : "Service quote",
+        text: [
+          quote.workDetails,
+          "",
+          `Service amount: ${currency.format(preview.serviceAmount)}`,
+          `Platform fee: ${currency.format(preview.platformFee)}`,
+          `Subtotal before GST and offers: ${currency.format(preview.subtotal)}`,
+        ].join("\n"),
+        customClass: { htmlContainer: "whitespace-pre-line" },
+        showDenyButton: isPending,
+        showCancelButton: isPending,
+        confirmButtonText: isPending ? "Accept quote" : "Close",
+        denyButtonText: "Decline quote",
+        cancelButtonText: "Close",
+      });
+
+      if (!isPending || (!answer.isConfirmed && !answer.isDenied)) return;
+
+      if (answer.isDenied) {
+        const confirmation = await Swal.fire({
+          title: "Decline this quote?",
+          text: "Your request will return to Admin for reassignment.",
+          icon: "question",
+          showCancelButton: true,
+          confirmButtonText: "Decline quote",
+          cancelButtonText: "Keep quote",
+        });
+
+        if (!confirmation.isConfirmed) return;
+      }
+
+      const decision = answer.isConfirmed ? "accept" : "decline";
+
+      await decideServiceRequestQuote(
+        requestId,
+        quote.id,
+        decision,
+        decision === "accept" ? preview.subtotal : undefined
+      );
+
+      await Swal.fire({
+        icon: "success",
+        title: decision === "accept" ? "Quote accepted" : "Quote declined",
+        text: decision === "accept"
+          ? "Your approved subtotal has been saved."
+          : "Your request is back with Admin for reassignment.",
+      });
+
+      setReload((value) => value + 1);
+    } catch (error) {
+      await Swal.fire({
+        icon: "error",
+        title: "Unable to process quote",
+        text: error.message,
+      });
+    }
   }
 
   return (
@@ -529,6 +666,52 @@ export default function ClientServiceRequests() {
                           </td>
 
                           <td className="whitespace-nowrap px-3 py-3">
+                            {item.paidOrderId && (
+                              <div className="space-y-2">
+                                <span className="inline-flex rounded-md bg-emerald-400/15 px-2 py-1 text-xs font-semibold text-emerald-300">
+                                  Paid
+                                </span>
+                                <div className="flex flex-wrap gap-2 text-xs">
+                                  <button
+                                    type="button"
+                                    className="text-teal-300 underline"
+                                    onClick={() => showPaidWorkshop(item.paidOrderId)}
+                                  >
+                                    Drop-off details
+                                  </button>
+                                  <a
+                                    className="text-teal-300 underline"
+                                    href={paymentReceiptUrl(item.paidOrderId)}
+                                  >
+                                    Download receipt
+                                  </a>
+                                </div>
+                              </div>
+                            )}
+                            {status === "assigned" && !item.paidOrderId && (
+                              <div className="flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  disabled={payingRequestId !== null}
+                                  onClick={() => handleViewQuote(item.request_id)}
+                                  className="rounded-md border border-teal-400/30 px-3 py-1.5 text-xs text-teal-300 hover:bg-teal-400/10 disabled:opacity-50"
+                                >
+                                  View Quote
+                                </button>
+
+                                {item.acceptedQuoteId != null && (
+                                  <button
+                                    type="button"
+                                    disabled={payingRequestId !== null}
+                                    aria-busy={payingRequestId === item.request_id}
+                                    onClick={() => handlePayNow(item.request_id, item.acceptedQuoteId)}
+                                    className="rounded-md bg-teal-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-500 disabled:cursor-not-allowed disabled:opacity-50"
+                                  >
+                                    {payingRequestId === item.request_id ? "Processing…" : "Pay Now"}
+                                  </button>
+                                )}
+                              </div>
+                            )}
                             {status === "pending" ? (
                               <button
                                 type="button"
@@ -541,7 +724,9 @@ export default function ClientServiceRequests() {
                                   : "Cancel"}
                               </button>
                             ) : (
-                              <span className="text-slate-500">—</span>
+                              !item.paidOrderId && status !== "assigned" && (
+                                <span className="text-slate-500">—</span>
+                              )
                             )}
                           </td>
                         </tr>

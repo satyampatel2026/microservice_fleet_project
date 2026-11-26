@@ -59,7 +59,11 @@ const trackingSessionSchema = new mongoose.Schema(
         type: Number,
         min: 0,
       },
-
+     speed: {
+      type: Number,
+     min: 0,
+     default: null,
+      },
       receivedAt: {
         type: Date,
       },

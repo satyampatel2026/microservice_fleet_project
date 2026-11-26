@@ -1,5 +1,5 @@
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Bell } from "lucide-react";
 import {
   getPartnerNotifications,
@@ -17,6 +17,46 @@ function formatDate(value) {
     dateStyle: "medium",
     timeStyle: "short",
   });
+}
+
+function NotificationTitle({ title }) {
+  const headingRef = useRef(null);
+  const textRef = useRef(null);
+
+  useLayoutEffect(() => {
+    const heading = headingRef.current;
+    const text = textRef.current;
+
+    function fitTitle() {
+      text.style.fontSize = "14px";
+
+      const width = text.getBoundingClientRect().width;
+      const availableWidth = heading.clientWidth;
+
+      if (availableWidth > 0 && width > availableWidth) {
+        const fontSize = parseFloat(getComputedStyle(text).fontSize);
+        text.style.fontSize = `${fontSize * availableWidth / width}px`;
+      }
+    }
+
+    fitTitle();
+
+    const observer = new ResizeObserver(fitTitle);
+    observer.observe(heading);
+
+    return () => observer.disconnect();
+  }, [title]);
+
+  return (
+    <h3
+      ref={headingRef}
+      className="whitespace-nowrap text-[14px] leading-tight font-bold text-gray-900"
+    >
+      <span ref={textRef} className="inline-block">
+        {title}
+      </span>
+    </h3>
+  );
 }
 
 export default function PartnerNotificationBell() {
@@ -246,23 +286,21 @@ export default function PartnerNotificationBell() {
               notifications.map((item) => (
                 <article
                   key={item.notification_id}
-                  className={`border-b border-gray-100 bg-white px-3 py-2.5 ${
+                  className={`border-b border-gray-100 bg-white px-2.5 py-1.5 ${
                     Number(item.is_read) === 0  ? "bg-violet-500/[0.06]"
                       : ""
                   }`}
                 >
-                  <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start justify-between gap-2">
 
-                    <div>
-                      <h3 className="text-xs font-semibold text-gray-900">
-                        {item.title}
-                      </h3>
+                    <div className="min-w-0 flex-1">
+                      <NotificationTitle title={item.title} />
 
-                      <p className="mt-1 text-xs leading-5 text-gray-700">
+                      <p className="mt-0.5 text-[10px] leading-tight text-gray-700">
                         {item.message}
                       </p>
 
-                      <p className="mt-1.5 text-[10px] text-gray-500">
+                      <p className="mt-0.5 text-[8px] leading-tight text-gray-500">
                         {formatDate(item.created_at)}
                       </p>
                     </div>
@@ -271,7 +309,7 @@ export default function PartnerNotificationBell() {
                       <button
                         type="button"
                         onClick={() => handleMarkRead(item)}
-                        className="shrink-0 text-[10px] font-semibold text-violet-700 hover:text-violet-900"
+                        className="shrink-0 text-[8px] leading-tight font-semibold text-violet-700 hover:text-violet-900"
                       >
                         Mark read
                       </button>

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState,} from "react";
-
 import Swal from "sweetalert2";
 import { getDashboardData,} from "../services/dashboardService";
+import { getPendingServiceRequests } from "../services/serviceRequestService";
 
 const initialData = {
   users: 0,
@@ -9,6 +9,8 @@ const initialData = {
   vehicles: 0,
   drivers: 0,
   workshops: 0,
+  totalRequests: null,
+completedRequests: null,
 };
 
 export default function useDashboard() {
@@ -26,6 +28,16 @@ export default function useDashboard() {
 
         const result = await getDashboardData();
         setData(result);
+        const [allRequests, completedRequests] = await Promise.all([
+  getPendingServiceRequests({ status: "all", limit: 1 }),
+  getPendingServiceRequests({ status: "completed", limit: 1 }),
+]);
+
+setData({
+  ...result,
+  totalRequests: allRequests.pagination.total,
+  completedRequests: completedRequests.pagination.total,
+});
         setLastUpdated(new Date());
 
         if (refresh) {

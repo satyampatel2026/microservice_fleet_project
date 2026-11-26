@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, NavLink } from "react-router-dom";
 import {
   LayoutDashboard,
   Wrench,
@@ -48,13 +48,13 @@ const menuItems = [
     label: "Inventory",
     icon: Package,
     href: "/partner/inventory",
-    enabled: false,
+    enabled: true,
   },
   {
-    label: "Payments",
+    label: "Earnings & payouts",
     icon: Wallet,
     href: "/partner/payments",
-    enabled: false,
+    enabled: true,
   },
   {
     label: "Business Details",
@@ -218,6 +218,26 @@ const Sidebar = ({ open, onClose, activePath = "/" }) => {
               </Link>
             );
           })}
+          <div className="mt-4 border-t border-white/10 pt-4">
+  <p className="mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.17em] text-slate-500">
+    Account
+  </p>
+
+  <NavLink
+    to="/partner/profile"
+    onClick={() => onClose?.()}
+    className={({ isActive }) =>
+      `flex min-h-[42px] items-center gap-3 rounded-xl px-3 py-2.5 text-[12px] font-medium !no-underline transition-colors ${
+        isActive
+          ? "bg-gradient-to-r from-[#0F766E] to-[#0E5957] !text-white"
+          : "!text-slate-400 hover:bg-white/[0.07] hover:!text-white"
+      }`
+    }
+  >
+    <UserRound size={17} strokeWidth={1.9} />
+    My Profile
+  </NavLink>
+</div>
         </nav>
 
         <div className="relative z-10 shrink-0 border-t border-white/[0.08] bg-[#081F27]/90 p-3">

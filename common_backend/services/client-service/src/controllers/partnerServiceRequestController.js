@@ -1,3 +1,4 @@
+const { getPaidQuotes } = require("../utils/paidQuoteStatus");
 const db = require("../model/db");
 const { createClientNotification } = require("../utils/notificationService");
 
@@ -21,7 +22,17 @@ const getAssignedServiceRequestsForPartner = async (req, res) => {
          r.priority,
          DATE_FORMAT(r.preferred_date, '%Y-%m-%d') AS preferred_date,
          r.status,
+         (SELECT q.id FROM service_quotes q
+          WHERE q.request_id = r.request_id AND q.partner_id = r.assigned_partner_id
+            AND q.status = 'accepted'
+          ORDER BY q.id DESC LIMIT 1) AS accepted_quote_id,
+          (SELECT q.service_amount FROM service_quotes q WHERE q.request_id = r.request_id AND q.partner_id = r.assigned_partner_id
+      AND q.status = 'accepted' ORDER BY q.id DESC LIMIT 1) AS partner_amount,
+         EXISTS ( SELECT 1 FROM service_quotes q WHERE q.request_id = r.request_id AND q.partner_id = r.assigned_partner_id
+      AND q.status IN ('pending', 'accepted')) AS has_active_quote,
          r.created_at,
+       (SELECT UNIX_TIMESTAMP(n.created_at) * 1000 FROM client_notifications n WHERE n.request_id = r.request_id AND n.client_id = r.client_id
+   AND n.notification_type = 'service_status' AND n.title = 'Service completed' ORDER BY n.created_at DESC LIMIT 1) AS completed_at_ms,
          c.company_name AS client_company_name,
          c.name AS client_contact_name,
          v.vehicle_number
@@ -34,9 +45,20 @@ const getAssignedServiceRequestsForPartner = async (req, res) => {
       [partnerId]
     );
 
+    const paid = await getPaidQuotes(requests.map((request) => request.accepted_quote_id), true)
+      .catch((error) => {
+        console.error("Load partner payment statuses:", error.message);
+        return null;
+      });
+
     return res.json({
       success: true,
-      data: requests,
+      data: requests.map((request) => {
+        const { accepted_quote_id, ...details } = request;
+        const payment = paid?.get(Number(accepted_quote_id));
+        return { ...details, transferReference: payment?.reference, transferredAt: payment?.transferredAt,
+          transferredPaise: payment?.transferredPaise, can_start: paid?.has(Number(accepted_quote_id)) ?? false,payment_status_available: paid !== null,};
+      }),
     });
   } catch (error) {
     console.error("Get partner jobs:", error.message);
@@ -127,13 +149,46 @@ const updatePartnerJobStatus = async (req, res) => {
   }
 
   try {
+    let paidQuoteId = null;
+
+    if (nextStatus === "in_progress") {
+      const [quotes] = await db.execute(
+        "SELECT id FROM service_quotes WHERE request_id = ? AND partner_id = ? " +
+          "AND status = 'accepted' ORDER BY id DESC LIMIT 1",
+        [requestId, partnerId]
+      );
+
+      const quote = quotes[0];
+      if (!quote) {
+        return res.status(409).json({
+          success: false,
+          message: "Send a quote and wait for the client to accept it before starting",
+        });
+      }
+
+      const paid = await getPaidQuotes([quote.id]);
+      if (!paid.has(Number(quote.id))) {
+        return res.status(409).json({
+          success: false,
+          message: "Wait for the client's confirmed payment before starting",
+        });
+      }
+      paidQuoteId = quote.id;
+    }
+
     const [result] = await db.query(
       `UPDATE vehicle_service_requests
-       SET status = ?, updated_at = UTC_TIMESTAMP()
+       SET status = ?, updated_at = UTC_TIMESTAMP(),
        WHERE request_id = ?
          AND assigned_partner_id = ?
-         AND status = ?`,
-      [nextStatus, requestId, partnerId, expectedCurrentStatus]
+         AND status = ?
+         AND (? IS NULL OR EXISTS (
+           SELECT 1 FROM service_quotes q
+           WHERE q.id = ? AND q.request_id = vehicle_service_requests.request_id
+             AND q.partner_id = vehicle_service_requests.assigned_partner_id
+             AND q.status = 'accepted'
+         ))`,
+      [nextStatus, requestId, partnerId, expectedCurrentStatus, paidQuoteId, paidQuoteId]
     );
 
     if (result.affectedRows === 0) {
@@ -188,3 +243,4 @@ if (jobRows.length > 0) {
 };
 
 module.exports = {getAssignedServiceRequestsForPartner,declinePartnerJob,updatePartnerJobStatus};
+

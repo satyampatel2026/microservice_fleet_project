@@ -136,4 +136,42 @@ const declineMyJob = async (req, res) => {
   }
 };
 
-module.exports = { getMyAssignedJobs,updateMyJobStatus,declineMyJob};
+const sendJobQuote = async (req, res) => {
+  const requestId = Number(req.params.requestId);
+  const partnerId = Number(req.partnerId);
+
+  if (
+    !Number.isSafeInteger(requestId) ||
+    requestId <= 0 ||
+    !Number.isSafeInteger(partnerId) ||
+    partnerId <= 0
+  ) {
+    return res.status(400).json({ message: "Invalid partner or request ID" });
+  }
+
+  try {
+    const response = await axios.post(
+      `${CLIENT_SERVICE_URL}/internal/partners/${partnerId}/service-requests/${requestId}/quotes`,
+      {
+        serviceAmount: req.body?.serviceAmount,
+        workDetails: req.body?.workDetails,
+      },
+      {
+        headers: { "x-internal-service-key": process.env.INTERNAL_SERVICE_KEY },
+        timeout: 5000,
+      }
+    );
+
+    return res.status(response.status).json(response.data);
+  } catch (error) {
+    const status = error.response?.status;
+
+    if ([400, 409].includes(status)) {
+      return res.status(status).json(error.response.data);
+    }
+
+    console.error("Send job quote:", error.message);
+    return res.status(503).json({ message: "Unable to send quote" });
+  }
+};
+module.exports = { getMyAssignedJobs,updateMyJobStatus,declineMyJob,sendJobQuote};

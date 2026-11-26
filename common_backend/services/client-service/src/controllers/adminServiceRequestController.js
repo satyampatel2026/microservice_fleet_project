@@ -1,4 +1,5 @@
 const db=require("../model/db");
+const { getPaidQuotes } = require("../utils/paidQuoteStatus");
 
 const getServiceRequestsForAdmin = async (req, res) => {
   const allowedStatuses = [
@@ -96,6 +97,8 @@ const getServiceRequestsForAdmin = async (req, res) => {
          r.priority,
          DATE_FORMAT(r.preferred_date, '%Y-%m-%d') AS preferred_date,
          r.status,
+         q.id AS accepted_quote_id,
+         q.accepted_subtotal AS approved_amount,
          r.assigned_partner_id,
          r.assigned_by,
          r.assigned_at,
@@ -105,6 +108,8 @@ const getServiceRequestsForAdmin = async (req, res) => {
        FROM vehicle_service_requests r
        LEFT JOIN clients c ON c.client_id = r.client_id
        LEFT JOIN vehicles v ON v.vehicle_id = r.vehicle_id
+       LEFT JOIN service_quotes q ON q.id = ( SELECT id FROM service_quotes WHERE request_id = r.request_id  AND partner_id = r.assigned_partner_id
+        AND status = 'accepted' ORDER BY id DESC LIMIT 1 )
        ${where}
        ORDER BY r.created_at DESC, r.request_id DESC
        LIMIT ? OFFSET ?`,
@@ -112,6 +117,32 @@ const getServiceRequestsForAdmin = async (req, res) => {
     );
 
     const summary = summaryRows[0];
+    const quoteIds = requests.map((request) => request.accepted_quote_id);
+const paidQuotes = await getPaidQuotes(quoteIds).catch((error) => {
+  console.error("Load admin payment status:", error.message);
+  return null;
+});
+
+  for (const request of requests) {
+  request.paymentStatus = "awaiting_quote";
+  request.paymentOrderId = null;
+
+  if (request.accepted_quote_id == null) continue;
+
+  if (paidQuotes == null) {
+    request.paymentStatus = "unavailable";
+    continue;
+  }
+
+  const orderId = paidQuotes.get(Number(request.accepted_quote_id));
+
+  if (orderId) {
+    request.paymentStatus = "paid";
+    request.paymentOrderId = orderId;
+  } else {
+    request.paymentStatus = "pending";
+  }
+}
 
     return res.json({
       success: true,

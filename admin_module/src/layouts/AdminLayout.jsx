@@ -35,11 +35,7 @@ export default function AdminLayout() {
       {/* Main workspace */}
       <div className="relative flex h-full min-h-0 flex-col overflow-hidden lg:pl-72">
         {/* Top navigation */}
-        <Navbar
-          onMenuClick={() => setSidebarOpen(true)}
-          dark={dark}
-          onToggleTheme={() => setDark((value) => !value)}
-        />
+        <Navbar onMenuClick={() => setSidebarOpen(true)} />
 
         {/* Page content */}
         <main className="relative min-h-0 w-full flex-1 overflow-y-auto overscroll-contain px-4 pb-8 pt-6 sm:px-6 lg:px-8 lg:py-8">
@@ -55,7 +51,7 @@ export default function AdminLayout() {
                   ease: "easeOut",
                 }}
               >
-                <Outlet />
+                <Outlet context={{ dark, setDark }} />
               </motion.div>
             </AnimatePresence>
           </div>

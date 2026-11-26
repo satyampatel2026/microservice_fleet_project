@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { RefreshCw, Wrench } from "lucide-react";
+import Swal from "sweetalert2";
 import { getPartners } from "../../services/partnerService";
 import {assignServiceRequest, getPendingServiceRequests, cancelServiceRequest, } from "../../services/serviceRequestService";
 
 const PAGE_SIZE = 10;
+const FETCH_PAGE_SIZE = 100;
 
 const STATUS_OPTIONS = [
   "all",
@@ -104,11 +106,14 @@ export default function ServiceRequests() {
   const [summary, setSummary] = useState(EMPTY_SUMMARY);
 
   const [status, setStatus] = useState("all");
+  const [paymentStatus, setPaymentStatus] = useState("all");
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalRequests, setTotalRequests] = useState(0);
+  const [serverTotalPages, setServerTotalPages] = useState(1);
+  const [serverTotalRequests, setServerTotalRequests] = useState(0);
+  const usePaymentFilter = paymentStatus !== "all";
+  const serverPage = usePaymentFilter ? 1 : page;
   const [selectedPartners, setSelectedPartners] = useState({});
 
   const [loading, setLoading] = useState(true);
@@ -166,21 +171,40 @@ export default function ServiceRequests() {
       setError("");
 
       try {
+        const limit = usePaymentFilter ? FETCH_PAGE_SIZE : PAGE_SIZE;
         const result = await getPendingServiceRequests({
           status,
           search,
-          page,
-          limit: PAGE_SIZE,
+          page: serverPage,
+          limit,
         });
 
         if (!active) return;
 
-        const rows = Array.isArray(result?.data) ? result.data : [];
+        const rows = Array.isArray(result?.data) ? [...result.data] : [];
+        const pages = Math.max(1, Number(result?.pagination?.totalPages) || 1);
+
+        if (usePaymentFilter) {
+          for (let nextPage = 2; nextPage <= pages; nextPage += 1) {
+            const nextResult = await getPendingServiceRequests({
+              status,
+              search,
+              page: nextPage,
+              limit,
+            });
+
+            if (!active) return;
+
+            if (Array.isArray(nextResult?.data)) {
+              rows.push(...nextResult.data);
+            }
+          }
+        }
 
         setRequests(rows);
         setSummary(result?.summary || EMPTY_SUMMARY);
-        setTotalPages(Math.max(1, Number(result?.pagination?.totalPages) || 1));
-        setTotalRequests(Number(result?.pagination?.total) || 0);
+        setServerTotalPages(pages);
+        setServerTotalRequests(Number(result?.pagination?.total) || 0);
 
         // Agar selected partner ab eligible nahi hai to selection clear ho jayegi.
         setSelectedPartners(current => {
@@ -220,7 +244,7 @@ export default function ServiceRequests() {
     return () => {
       active = false;
     };
-  }, [status, search, page, reload, partners]);
+  }, [status, search, serverPage, usePaymentFilter, reload, partners]);
 
   async function handleAssign(request) {
     const partnerId = selectedPartners[request.request_id];
@@ -284,6 +308,33 @@ export default function ServiceRequests() {
     setPage(1);
   }
 
+  function showPaymentDetails(request) {
+    const details = [
+      "Status: Paid",
+      "Service request: " + (request.request_code || request.request_id),
+    ];
+
+    if (request.approved_amount != null) {
+      const amount = new Intl.NumberFormat("en-IN", {
+        style: "currency",
+        currency: "INR",
+      }).format(Number(request.approved_amount));
+      details.push("Amount paid: " + amount);
+    }
+
+    if (request.paymentOrderId) {
+      details.push("Razorpay order ID: " + request.paymentOrderId);
+    }
+
+    Swal.fire({
+      title: "Payment details",
+      icon: "success",
+      text: details.join("\n"),
+      customClass: { htmlContainer: "whitespace-pre-line text-left" },
+      confirmButtonText: "Close",
+    });
+  }
+
   function showCancelDialog(request) {
     setCancelTarget(request);
     setCancellationReason("");
@@ -298,8 +349,26 @@ export default function ServiceRequests() {
     setCancelError("");
   }
 
-  const firstRow = totalRequests === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
-  const lastRow = Math.min(page * PAGE_SIZE, totalRequests);
+  let totalRequests = serverTotalRequests;
+  let totalPages = serverTotalPages;
+  let currentPage = Math.min(page, totalPages);
+  let visibleRequests = requests;
+
+  if (usePaymentFilter) {
+    const matchingRequests = requests.filter((request) => {
+      const rowPaymentStatus = request.paymentStatus || "unavailable";
+      return rowPaymentStatus === paymentStatus;
+    });
+
+    totalRequests = matchingRequests.length;
+    totalPages = Math.max(1, Math.ceil(totalRequests / PAGE_SIZE));
+    currentPage = Math.min(page, totalPages);
+    const start = (currentPage - 1) * PAGE_SIZE;
+    visibleRequests = matchingRequests.slice(start, start + PAGE_SIZE);
+  }
+
+  const firstRow = totalRequests === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
+  const lastRow = Math.min(currentPage * PAGE_SIZE, totalRequests);
 
   return (
     <div className="w-full space-y-4">
@@ -402,25 +471,17 @@ export default function ServiceRequests() {
         </select>
       </section>
        <section className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm dark:border-white/[0.08] dark:bg-[#191e2d]">
-  {loading ? (
-    <p className="py-10 text-center text-xs text-slate-500 dark:text-slate-400">
-      Loading service requests...
-    </p>
-  ) : requests.length === 0 ? (
-    <p className="py-10 text-center text-xs text-slate-500 dark:text-slate-400">
-      No service requests found.
-    </p>
-  ) : (
     <table className="w-full table-fixed text-left text-xs">
       <colgroup>
         <col className="w-[5%]" />
         <col className="w-[10%]" />
+        <col className="w-[12%]" />
+        <col className="w-[14%]" />
+        <col className="w-[7%]" />
+        <col className="w-[8%]" />
+        <col className="w-[8%]" />
         <col className="w-[13%]" />
-        <col className="w-[19%]" />
-        <col className="w-[9%]" />
         <col className="w-[10%]" />
-        <col className="w-[9%]" />
-        <col className="w-[11%]" />
         <col className="w-[13%]" />
       </colgroup>
 
@@ -433,13 +494,37 @@ export default function ServiceRequests() {
           <th className="px-3 py-2.5">Priority</th>
           <th className="px-3 py-2.5">Preferred</th>
           <th className="px-3 py-2.5">Status</th>
+          <th className="px-3 py-2.5">
+            <select
+              aria-label="Filter by payment status"
+              value={paymentStatus}
+              onChange={(event) => {
+                setPaymentStatus(event.target.value);
+                setPage(1);
+              }}
+              className="max-w-full cursor-pointer rounded-md border border-slate-200 bg-white px-1.5 py-1 text-[10px] font-semibold text-slate-700 dark:border-white/10 dark:bg-slate-800 dark:text-slate-200"
+            >
+              <option value="all">Payment</option>
+              <option value="paid">Paid</option>
+              <option value="pending">Pending</option>
+              <option value="awaiting_quote">Awaiting quote approval</option>
+              <option value="unavailable">Unavailable</option>
+            </select>
+          </th>
           <th className="px-3 py-2.5">Partner</th>
           <th className="px-3 py-2.5">Actions</th>
         </tr>
       </thead>
 
       <tbody className="divide-y divide-slate-100 dark:divide-white/[0.06]">
-        {requests.map((request, index) => {
+        {(loading || visibleRequests.length === 0) && (
+          <tr>
+            <td colSpan={10} className="py-10 text-center text-xs text-slate-500 dark:text-slate-400">
+              {loading ? "Loading service requests..." : "No matching service requests."}
+            </td>
+          </tr>
+        )}
+        {!loading && visibleRequests.map((request, index) => {
           const choices = getEligiblePartners(
             partners,
             request.service_id,
@@ -458,7 +543,7 @@ export default function ServiceRequests() {
               className="align-top text-slate-700 dark:text-slate-300"
             >
                 <td className="px-2 py-3 text-slate-500 dark:text-slate-400">
-                {(page - 1) * PAGE_SIZE + index + 1}
+                {firstRow + index}
                 </td>
               <td className="break-words px-2 py-3">
                 <p className="font-semibold text-slate-900 dark:text-slate-100">
@@ -505,7 +590,33 @@ export default function ServiceRequests() {
                   {formatStatus(request.status)}
                 </span>
               </td>
-
+              <td className="break-words px-3 py-3">
+                {request.paymentStatus === "paid" && (
+                  <button
+                    type="button"
+                    onClick={() => showPaymentDetails(request)}
+                    aria-label={"View payment details for " + (request.request_code || request.request_id)}
+                    className="rounded-md bg-emerald-100 px-2 py-1 font-semibold text-emerald-800 hover:bg-emerald-200 dark:bg-emerald-400/15 dark:text-emerald-300"
+                  >
+                    Paid
+                  </button>
+                )}
+                {request.paymentStatus === "pending" && (
+                  <span className="rounded-md bg-amber-100 px-2 py-1 font-semibold text-amber-800 dark:bg-amber-400/15 dark:text-amber-300">
+                    Pending
+                  </span>
+                )}
+                {request.paymentStatus === "awaiting_quote" && (
+                  <span className="text-slate-500 dark:text-slate-400">
+                    Awaiting quote approval
+                  </span>
+                )}
+                {(!request.paymentStatus || request.paymentStatus === "unavailable") && (
+                  <span className="text-slate-500 dark:text-slate-400">
+                    Unavailable
+                  </span>
+                )}
+              </td>
               <td className="break-words px-2 py-3">
                 {assignedPartner ? (
                   <>
@@ -582,16 +693,13 @@ export default function ServiceRequests() {
                       </button>
                     </div>
                   </div>
-                ) : (
-                  "—"
-                )}
+                ) : null}
               </td>
             </tr>
           );
         })}
       </tbody>
     </table>
-  )}
 
   <footer className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 px-3 py-2.5 text-[10px] dark:border-white/[0.06]">
     <p className="text-slate-500 dark:text-slate-400">
@@ -601,21 +709,21 @@ export default function ServiceRequests() {
     <div className="flex items-center gap-1.5">
       <button
         type="button"
-        disabled={loading || page <= 1}
-        onClick={() => setPage(current => current - 1)}
+        disabled={loading || currentPage <= 1}
+        onClick={() => setPage(currentPage - 1)}
         className="rounded-md border border-slate-200 px-2.5 py-1.5 text-slate-700 disabled:cursor-not-allowed disabled:opacity-40 dark:border-white/10 dark:text-slate-300"
       >
         Previous
       </button>
 
       <span className="px-1 text-slate-500 dark:text-slate-400">
-        {page} / {totalPages}
+        {currentPage} / {totalPages}
       </span>
 
       <button
         type="button"
-        disabled={loading || page >= totalPages}
-        onClick={() => setPage(current => current + 1)}
+        disabled={loading || currentPage >= totalPages}
+        onClick={() => setPage(currentPage + 1)}
         className="rounded-md border border-slate-200 px-2.5 py-1.5 text-slate-700 disabled:cursor-not-allowed disabled:opacity-40 dark:border-white/10 dark:text-slate-300"
       >
         Next

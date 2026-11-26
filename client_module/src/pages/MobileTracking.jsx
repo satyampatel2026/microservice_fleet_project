@@ -54,6 +54,7 @@ export default function MobileTracking() {
       latitude: position.coords.latitude,
       longitude: position.coords.longitude,
       accuracy: position.coords.accuracy,
+      speed: position.coords.speed,
     });
     if (mounted.current && sharing.current) {
       setLatest(result.data.latestLocation);
